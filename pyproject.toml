@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "software-quality-agent"
+version = "0.1.0"
+description = "Multi-agent service for software quality management"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "aiosqlite>=0.20,<1.0",
+    "fastapi>=0.115,<1.0",
+    "httpx>=0.27,<1.0",
+    "pydantic>=2.8,<3.0",
+    "pydantic-settings>=2.6,<3.0",
+    "sqlalchemy[asyncio]>=2.0.36,<3.0",
+    "uvicorn[standard]>=0.32,<1.0",
+]
+
+[project.scripts]
+software-quality-agent = "software_quality_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
