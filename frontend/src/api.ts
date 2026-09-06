@@ -117,7 +117,7 @@ export async function readDatabase(payload: {
           : payload.scope === "audit_events"
             ? [{ operation: "seed_demo_data", created_at: new Date().toISOString() }]
             : [{ scope: payload.scope, keyword: payload.keyword || "" }];
-    return { scope: payload.scope, rows, total: rows.length };
+    return { scope: payload.scope, rows: rows.map(row => ({ ...row })), total: rows.length };
   }
 }
 
