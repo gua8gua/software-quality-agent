@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, ArrowUpRight, ChevronRight, Database, Download, FileText, FolderOpen, GitBranch, Layers, Plus, RefreshCw, Search, ShieldCheck, Upload } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ChevronRight, Database, Download, FileText, FolderOpen, GitBranch, Layers, Plus, RefreshCw, Search, Settings2, ShieldCheck, Upload } from "lucide-react";
 import { all, date, errorText, get, post, statusLabel, url, type Artifact, type Capabilities, type Dataset, type Project, type Run, type Visualization } from "./api";
 import { Alert, Empty, Loading, Pager } from "./common";
 import { NewProject, UploadDialog } from "./Dialogs";
 import { Results } from "./Results";
 import { LayerAnalysis, LayerRunMatrix } from "./LayerAnalysis";
 import { StructureTree, StructureDetail } from "./Structure";
+import { ModelConfigPage } from "./ModelConfig";
 
 const projectPath = (id: string) => `/projects/${encodeURIComponent(id)}`;
 function navigate(path: string) { window.location.hash = path; }
@@ -33,12 +34,13 @@ export default function Workspace() {
     }
   }, [tenant]);
   const project = route[0] === "projects" ? route[1] : undefined;
+  const isModels = route[0] === "models";
   const detail = route[2];
   function applyTenant(event: FormEvent) { event.preventDefault(); const value = tenantDraft.trim(); if (value) { setTenant(value); setActionError(""); navigate("/projects"); } }
-  return <div className="qm-app"><aside className="qm-sidebar"><a className="qm-brand" href="#/projects"><span><ShieldCheck size={23} /></span><div>软件质量<span>QUALITY WORKSPACE</span></div></a><p className="qm-nav-label">工作台</p><a className="qm-nav-item active" href="#/projects"><FolderOpen size={19} />项目资料库</a><div className="qm-sidebar-bottom"><Database size={18} /><span>项目 · 制品 · 追踪关系<small>软件质量管理后端</small></span></div></aside>
-    <div className="qm-shell"><header className="qm-topbar"><div className="qm-breadcrumb"><a href="#/projects">项目资料库</a>{project && <><ChevronRight size={14} /><a href={`#${projectPath(project)}`}>{project}</a></>}{detail && <><ChevronRight size={14} /><span>{detail === "runs" ? "TLR 检测结果" : "资料详情"}</span></>}</div><form className="qm-tenant" onSubmit={applyTenant}><label htmlFor="workspace">工作空间</label><input id="workspace" value={tenantDraft} onChange={e => setTenantDraft(e.target.value)} maxLength={128} required /><button disabled={!tenantDraft.trim()}>切换</button></form></header>
+  return <div className="qm-app"><aside className="qm-sidebar"><a className="qm-brand" href="#/projects"><span><ShieldCheck size={23} /></span><div>软件质量<span>QUALITY WORKSPACE</span></div></a><p className="qm-nav-label">工作台</p><a className={`qm-nav-item ${!isModels ? "active" : ""}`} href="#/projects"><FolderOpen size={19} />项目资料库</a><a className={`qm-nav-item ${isModels ? "active" : ""}`} href="#/models"><Settings2 size={19} />模型配置</a><div className="qm-sidebar-bottom"><Database size={18} /><span>项目 · 制品 · 追踪关系<small>软件质量管理后端</small></span></div></aside>
+    <div className="qm-shell"><header className="qm-topbar"><div className="qm-breadcrumb"><a href={isModels ? "#/models" : "#/projects"}>{isModels ? "模型配置" : "项目资料库"}</a>{project && <><ChevronRight size={14} /><a href={`#${projectPath(project)}`}>{project}</a></>}{detail && <><ChevronRight size={14} /><span>{detail === "runs" ? "TLR 检测结果" : "资料详情"}</span></>}</div><form className="qm-tenant" onSubmit={applyTenant}><label htmlFor="workspace">工作空间</label><input id="workspace" value={tenantDraft} onChange={e => setTenantDraft(e.target.value)} maxLength={128} required /><button disabled={!tenantDraft.trim()}>切换</button></form></header>
       <main className="qm-main">{actionError && <Alert>{actionError}</Alert>}
-        {!project ? <Projects key={tenant} tenant={tenant} /> : detail === "artifacts" && route[3] ? <ArtifactPage key={`${tenant}-${route[3]}`} tenant={tenant} project={project} id={route[3]} kinds={kinds} /> : detail === "runs" && route[3] ? <RunPage key={`${tenant}-${route[3]}`} tenant={tenant} project={project} id={route[3]} refresh={refresh} begin={begin} /> : <ProjectPage key={`${tenant}-${project}`} tenant={tenant} projectId={project} refresh={refresh} capabilities={capabilities} kinds={kinds} begin={begin} />}
+        {isModels ? <ModelConfigPage key={tenant} tenant={tenant} /> : !project ? <Projects key={tenant} tenant={tenant} /> : detail === "artifacts" && route[3] ? <ArtifactPage key={`${tenant}-${route[3]}`} tenant={tenant} project={project} id={route[3]} kinds={kinds} /> : detail === "runs" && route[3] ? <RunPage key={`${tenant}-${route[3]}`} tenant={tenant} project={project} id={route[3]} refresh={refresh} begin={begin} /> : <ProjectPage key={`${tenant}-${project}`} tenant={tenant} projectId={project} refresh={refresh} capabilities={capabilities} kinds={kinds} begin={begin} />}
       </main>
     </div></div>;
 }
@@ -82,7 +84,7 @@ function ProjectPage({ tenant, projectId, capabilities, kinds, begin, refresh }:
   if (error) return <Alert>{error}</Alert>;
   if (!project) return <Empty title="项目不存在" />;
   return <><a className="qm-back" href="#/projects"><ArrowLeft size={15} />所有项目</a><div className="qm-heading"><div><div className="qm-eyebrow">PROJECT / {project.id}</div><h1>{project.name}</h1><p>{project.description || "查看项目资料与历史分析记录"}</p></div><div className="qm-toolbar"><button disabled={!capabilities} onClick={() => setUpload(true)}><Upload size={17} />上传资料</button><button className="qm-primary" disabled={!dataset || artifacts.length < 2 || inventoryLoading || !!inventoryError} onClick={() => setAnalysis(true)}><GitBranch size={17} />重新进行 TLR 检测</button></div></div>
-    {capabilities && (!capabilities.embedding_configured || !capabilities.llm_configured) && <div className="qm-notice">模型接口尚未配置完整。可以管理资料和查看已有结果；开始检测前请配置后端 embedding 与 LLM 接口。</div>}
+    {capabilities && (!capabilities.embedding_configured || !capabilities.llm_configured) && <div className="qm-notice">环境变量中的模型接口尚未配置完整。你可以在 <a href="#/models">模型配置</a> 中为 TLR 任务选择模型；任务绑定会优先于 .env。</div>}
     <div className="qm-summary-strip"><div><strong>{artifacts.length}</strong><span>当前快照制品</span></div><div><strong>{datasets.length}</strong><span>资料快照</span></div><div><strong>{runs.length}</strong><span>TLR 运行记录</span></div><div><strong>{runs.filter(r => r.status === "completed").length}</strong><span>已完成运行</span></div></div>
     <section className="qm-panel"><div className="qm-panel-head"><div className="qm-tabs" role="tablist"><button role="tab" aria-selected={tab === "data"} onClick={() => setTab("data")}>资料清单</button><button role="tab" aria-selected={tab === "structure"} onClick={() => setTab("structure")}>结构关系</button><button role="tab" aria-selected={tab === "runs"} onClick={() => setTab("runs")}>TLR 运行记录 <span>{runs.length}</span></button></div><button onClick={() => setTick(v => v + 1)}><RefreshCw size={15} />刷新</button></div>
       {tab === "data" && <><div className="qm-toolbar qm-inset"><label className="qm-inline-label">资料快照<select value={datasetId} onChange={e => { setDatasetId(e.target.value); setKind("all"); setSearch(""); }} aria-label="资料快照">{!datasets.length && <option value="">暂无快照</option>}{datasets.map(d => <option value={d.id} key={d.id}>{d.version} · {date(d.created_at)}</option>)}</select></label><input aria-label="搜索制品" placeholder="搜索标识或文件名…" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} /><select value={kind} aria-label="筛选文件业务类型" onChange={e => { setKind(e.target.value); setPage(0); }}><option value="all">全部业务类型</option>{[...new Set(artifacts.map(a => a.kind))].map(k => <option key={k} value={k}>{kinds.get(k) || k}</option>)}</select></div>

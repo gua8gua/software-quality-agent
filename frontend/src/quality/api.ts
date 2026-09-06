@@ -14,6 +14,11 @@ export interface Candidate { id: string; source_element_id: string; target_eleme
 export interface Link { id: string; source_artifact_id: string; target_artifact_id: string; relation: string; evidence_candidate_ids: string[] }
 export interface Visualization { elements: Element[]; candidates: Candidate[]; links: Link[] }
 export interface Capabilities { kinds: { id: string; label: string }[]; extensions: string[]; max_file_bytes: number; max_files: number; embedding_configured: boolean; llm_configured: boolean }
+export interface ModelItem { id: string; owned_by: string }
+export interface ModelConnection { id: string; name: string; provider: string; base_url: string; is_local: boolean; api_key_configured: boolean; models: ModelItem[]; status: string; status_message: string; last_checked_at: string | null }
+export interface ModelTask { id: "tlr_embedding" | "tlr_classification" | "architecture_extraction"; label: string; description: string; capability: "embedding" | "chat" }
+export interface ModelBinding { task: ModelTask["id"]; connection_id: string | null; model_id: string | null; dimension: number | null; test_status: string; test_message: string; last_tested_at: string | null; fallback?: { source: string; base_url: string; model_id: string; api_key_configured: boolean } }
+export interface ModelConfig { connections: ModelConnection[]; tasks: ModelTask[]; bindings: ModelBinding[] }
 export interface Evidence {
   candidate: Candidate & { evidence: { related?: boolean; evidence?: string; source_quote?: string; target_quote?: string; validation_status?: string; raw_response?: unknown } | null };
   source: { artifact_id: string; external_id: string; kind: string; start: number; end: number; content: string; processing?: Record<string, unknown> };
@@ -21,6 +26,7 @@ export interface Evidence {
 }
 
 const base = (import.meta.env.VITE_QUALITY_API_BASE || "/api/v1/tlr").replace(/\/$/, "");
+const apiRoot = base.replace(/\/tlr$/, "");
 export function url(path: string, tenant: string, project?: string) {
   const query = new URLSearchParams({ tenant_id: tenant });
   if (project) query.set("project_id", project);
@@ -37,6 +43,15 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
 }
 export const get = <T,>(path: string, tenant: string, project?: string) => request<T>(url(path, tenant, project));
 export const post = <T,>(path: string, tenant: string, project: string | undefined, body?: unknown) => request<T>(url(path, tenant, project), { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+export const modelUrl = (path: string, tenant: string) => `${apiRoot}/model-config${path}?${new URLSearchParams({ tenant_id: tenant })}`;
+export const getModelConfig = (tenant: string) => request<ModelConfig>(modelUrl("", tenant));
+export const createModelConnection = (tenant: string, body: { name: string; base_url: string; api_key?: string }) => request<ModelConnection>(modelUrl("/connections", tenant), { method: "POST", body: JSON.stringify(body) });
+export const updateModelConnection = (tenant: string, id: string, body: { name: string; base_url: string; api_key?: string }) => request<ModelConnection>(modelUrl(`/connections/${encodeURIComponent(id)}`, tenant), { method: "PUT", body: JSON.stringify(body) });
+export const refreshModelConnection = (tenant: string, id: string) => request<ModelConnection>(modelUrl(`/connections/${encodeURIComponent(id)}/refresh`, tenant), { method: "POST" });
+export const deleteModelConnection = (tenant: string, id: string) => request<boolean>(modelUrl(`/connections/${encodeURIComponent(id)}`, tenant), { method: "DELETE" });
+export const bindModelTask = (tenant: string, task: string, body: { connection_id: string; model_id: string; dimension?: number }) => request<ModelBinding>(modelUrl(`/tasks/${encodeURIComponent(task)}`, tenant), { method: "PUT", body: JSON.stringify(body) });
+export const testModelTask = (tenant: string, task: string) => request<ModelBinding>(modelUrl(`/tasks/${encodeURIComponent(task)}/test`, tenant), { method: "POST" });
+export const unbindModelTask = (tenant: string, task: string) => request<ModelBinding>(modelUrl(`/tasks/${encodeURIComponent(task)}`, tenant), { method: "DELETE" });
 export async function all<T>(path: string, tenant: string, project?: string): Promise<T[]> {
   const rows: T[] = [];
   for (;;) {
