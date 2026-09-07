@@ -1,0 +1,198 @@
+{
+  "schema_version": "1.0",
+  "created_on": "2026-09-05",
+  "basis": "资料/软件质量部分/论文池/软件质量基础/推荐数据集.md",
+  "root_categories": ["Project KB", "Standards KB", "Defect Cases KB", "Quality Rules KB"],
+  "datasets": [
+    {
+      "id": "safa-dronology-v0-v1",
+      "category": "Project KB",
+      "source_url": "https://github.com/SAREC-Lab/SAFA-Artifacts",
+      "source_revision": "ac201a4a7364cf91110c33a9f5b41df9ffbfe709",
+      "license": "MIT",
+      "local_path": "Project KB/safa-dronology-v0-v1",
+      "tasks": ["multi-artifact traceability", "version/change analysis", "safety artifact graph"],
+      "counts": {"trees_per_version": 16, "v0_node_occurrences": 263, "v1_node_occurrences": 382},
+      "origin": "copied from existing validated dataset; original preserved"
+    },
+    {
+      "id": "easyclinic",
+      "category": "Project KB",
+      "source_url": "http://sarec.nd.edu/coest/datasets/EasyClinic.zip",
+      "license": "not stated in archive; research use pending confirmation",
+      "local_path": "Project KB/easyclinic",
+      "tasks": ["requirement-design-code-test traceability", "cross-artifact consistency"],
+      "contents": ["Italian and English use cases", "interaction diagrams", "class descriptions", "test cases", "trace oracles"],
+      "assets": [{"path": "Project KB/easyclinic/EasyClinic.zip", "bytes": 236501, "sha256": "c7661abbe5ca69d5155d1cdc67edf54b99e6f645e6bce4bf9582425675e81715"}]
+    },
+    {
+      "id": "cm1-nasa-trace",
+      "category": "Project KB",
+      "source_url": "http://sarec.nd.edu/coest/datasets/CM1-NASA.zip",
+      "citation_doi": "10.1109/TSE.2006.3",
+      "license": "not stated in archive; research use pending confirmation",
+      "local_path": "Project KB/cm1-nasa-trace",
+      "tasks": ["high-level to low-level requirement traceability", "coverage"],
+      "counts": {"high_level_artifacts": 22, "low_level_artifacts": 53, "gold_links": 45},
+      "assets": [{"path": "Project KB/cm1-nasa-trace/CM1-NASA.zip", "bytes": 14802, "sha256": "b7838320a869a674d9a28c47d6d01c2478d3557c1dc4d7c562136b1b9a2827ba"}]
+    },
+    {
+      "id": "ebt",
+      "category": "Project KB",
+      "source_url": "http://sarec.nd.edu/coest/datasets/EBT.zip",
+      "license": "not stated in archive; research use pending confirmation",
+      "local_path": "Project KB/ebt",
+      "tasks": ["requirement-code traceability", "requirement-test coverage"],
+      "counts": {"requirements": 40, "java_classes": 50, "test_cases": 25},
+      "assets": [{"path": "Project KB/ebt/EBT.zip", "bytes": 91735, "sha256": "58f1c470df735767c44d8b08b3a44e1783482a4e35d2b37fcff4771ac8e35ba4"}]
+    },
+    {
+      "id": "lissa-smos-req2code",
+      "category": "Project KB",
+      "source_url": "https://github.com/ArDoCo/Replication-Package-ICSE25_LiSSA-Toward-Generic-Traceability-Link-Recovery-through-RAG",
+      "source_revision": "a8e652f29bbdcc4bdcd3d98cd85aa4a37cb65480",
+      "license": "MIT",
+      "local_path": "Project KB/lissa-smos-req2code",
+      "tasks": ["requirement-code traceability", "trace link recovery"],
+      "counts": {"source_use_cases": 67, "target_code_artifacts": 100, "gold_links": 1044},
+      "origin": "copied from existing validated dataset; original preserved"
+    },
+    {
+      "id": "codocbench",
+      "category": "Project KB",
+      "source_url": "https://github.com/kunpai/codocbench",
+      "source_revision": "ee0256da15a07dcf265d5313fe51a269aa7268e0",
+      "dataset_doi": "10.5281/zenodo.14251623",
+      "local_path": "Project KB/codocbench",
+      "tasks": ["code-documentation alignment", "software maintenance consistency"],
+      "counts": {"pairs": 4573, "projects": 200, "train": 2300, "test": 2273},
+      "license": "repository license and upstream project licenses apply",
+      "assets": [{"path": "Project KB/codocbench/codocbench-ee0256d.zip", "bytes": 11045346, "sha256": "7d546c1f13c7ef648b93b36d6edc5a1ca9985ffba918f7d8feb63d59c0040330"}]
+    },
+    {
+      "id": "ardoco-architecture-benchmark",
+      "category": "Project KB",
+      "source_url": "https://github.com/ArDoCo/Benchmark",
+      "source_revision": "e60ddb2676358048131178c925e86a5b33ec38f2",
+      "license": "MIT for models/gold standards; project-specific licenses for texts, diagrams and code",
+      "local_path": "Project KB/ardoco-architecture-benchmark",
+      "tasks": ["architecture documentation-model-code traceability", "architecture consistency"],
+      "counts": {"benchmark_projects": 5},
+      "storage_note": "archive-only because extracted paths exceed the default Windows path limit",
+      "assets": [{"path": "Project KB/ardoco-architecture-benchmark/ardoco-benchmark-e60ddb2.zip", "bytes": 5070176, "sha256": "5397d58eeb010e4c01192307943608f9a9e02284ed57e27e2beb31f388fdd82f"}]
+    },
+    {
+      "id": "nist-ssdf-1.1-standard",
+      "category": "Standards KB",
+      "source_url": "https://csrc.nist.gov/pubs/sp/800/218/final",
+      "license": "official US government publication; retain attribution",
+      "local_path": "Standards KB/nist-ssdf-1.1",
+      "tasks": ["secure software development standard knowledge"],
+      "assets": [{"path": "Standards KB/nist-ssdf-1.1/NIST.SP.800-218.pdf", "bytes": 739891, "sha256": "617746e553a9e2da49bfbd4eef0dfc3094758a39b869314e4173ac36605cde22"}]
+    },
+    {
+      "id": "nasa-npr-7150.2d",
+      "category": "Standards KB",
+      "source_url": "https://nodis3.gsfc.nasa.gov/displayDir.cfm?t=NPR&c=7150&s=2D",
+      "license": "official NASA public document; retain attribution",
+      "local_path": "Standards KB/nasa-npr-7150.2d",
+      "tasks": ["software engineering requirements", "life-cycle quality controls"],
+      "assets": [{"path": "Standards KB/nasa-npr-7150.2d/N_PR_7150_002D.pdf", "bytes": 566622, "sha256": "1a5b7f9b0b0141e88374adf7a21a4d6ced0b29c221ca89a0a514f495d6532802"}]
+    },
+    {
+      "id": "nasa-std-8739.8b",
+      "category": "Standards KB",
+      "source_url": "https://standards.nasa.gov/standard/NASA/NASA-STD-87398",
+      "license": "official NASA public document; retain attribution",
+      "local_path": "Standards KB/nasa-std-8739.8b",
+      "tasks": ["software assurance", "software safety", "verification evidence"],
+      "assets": [{"path": "Standards KB/nasa-std-8739.8b/NASA-STD-8739.8B.pdf", "bytes": 754858, "sha256": "45425d0886fc6027a1a3574f40d07bbd66950520bc432c8f018ab4e9eb708b32"}]
+    },
+    {
+      "id": "defects4j-framework-metadata",
+      "category": "Defect Cases KB",
+      "source_url": "https://github.com/rjust/defects4j",
+      "source_revision": "8c16da8230843cdc918eaf4ddb449637f02b83c6",
+      "license": "MIT for framework; checked-out project licenses apply",
+      "local_path": "Defect Cases KB/defects4j",
+      "tasks": ["real code defect cases", "buggy-fixed-test evaluation"],
+      "counts": {"active_bugs": 854},
+      "storage_note": "framework and metadata archive only; project revisions are fetched by Defects4J checkout",
+      "assets": [{"path": "Defect Cases KB/defects4j/defects4j-8c16da8.zip", "bytes": 149381719, "sha256": "ec4d8dd8e79314528eb16101237a92889de3f8c22e47d83b72b294aa3439273a"}]
+    },
+    {
+      "id": "requirements-ambiguity-v1.0.1",
+      "category": "Defect Cases KB",
+      "source_url": "https://github.com/profzivkovic/software-requirements-ambiguity-detection-replication",
+      "release": "v1.0.1",
+      "record_doi": "10.5281/zenodo.18601787",
+      "license": "MIT for replication package; verify upstream corpus terms",
+      "local_path": "Defect Cases KB/requirements-ambiguity",
+      "tasks": ["ambiguous requirement classification", "requirements smell baseline"],
+      "counts": {"pure_rows": 6725, "user_story_rows": 1680, "total_rows": 8405},
+      "assets": [{"path": "Defect Cases KB/requirements-ambiguity/requirements-ambiguity-v1.0.1.zip", "bytes": 363992, "sha256": "0f68dfbd4e78feb36e69d107f15aa417385681d05c0efcca65cdf2c37923ff98"}]
+    },
+    {
+      "id": "irrelevant-requirements-v1",
+      "category": "Defect Cases KB",
+      "source_url": "https://figshare.com/articles/dataset/Irrelevant_Requirements/19380545",
+      "doi": "10.6084/m9.figshare.19380545.v1",
+      "license": "CC-BY-4.0",
+      "local_path": "Defect Cases KB/irrelevant-requirements",
+      "tasks": ["irrelevant requirement detection", "requirement quality counterexamples"],
+      "counts": {"rows": 621, "relevant": 557, "irrelevant": 64},
+      "origin": "copied from existing validated dataset; original preserved"
+    },
+    {
+      "id": "nasa-cm1-defect-metrics",
+      "category": "Defect Cases KB",
+      "source_url": "https://zenodo.org/records/268434",
+      "license": "not clearly stated in archive; research use pending confirmation",
+      "local_path": "Defect Cases KB/nasa-cm1-defect-metrics",
+      "tasks": ["static code metrics", "defect prediction"],
+      "storage_note": "This is not the CM1 high-level/low-level trace dataset; it is intentionally classified as a defect case dataset.",
+      "assets": [{"path": "Defect Cases KB/nasa-cm1-defect-metrics/cm1.zip", "bytes": 117648, "sha256": "4b96f32acde455d19913e512e96bdd36644adec7cec4b2fad59cb15c06562dfe"}]
+    },
+    {
+      "id": "arta-requirement-testability-r1",
+      "category": "Quality Rules KB",
+      "source_url": "https://github.com/m-zakeri/ARTA",
+      "source_revision": "493297655cd653f8ebc797ef5c3c7ee2f736ab4c",
+      "license": "MIT",
+      "local_path": "Quality Rules KB/arta-requirement-testability",
+      "tasks": ["requirement testability", "requirements smell", "rule dictionary"],
+      "counts": {"ds1": 985, "ds2": 1092, "ds3": 1522, "ds4": 1153, "smelly_words": 1000},
+      "origin": "copied from existing validated dataset; original preserved",
+      "assets": [{"path": "Quality Rules KB/arta-requirement-testability/ARTADataset_release1.zip", "bytes": 1312856, "sha256": "74e5b96c503a8b4e84af33f646b089aa76d156b3c9564aa4d68b0dae2690089f"}]
+    },
+    {
+      "id": "nasa-requirements-checklists",
+      "category": "Quality Rules KB",
+      "source_url": "https://swehb.nasa.gov/display/SWES/Software+Engineering+Process+Asset+Library",
+      "license": "official NASA public process assets; retain attribution",
+      "local_path": "Quality Rules KB/nasa-requirements-checklists",
+      "tasks": ["requirements quality rules", "content checks", "editorial checks", "analysis checklist"],
+      "assets": [
+        {"path": "Quality Rules KB/nasa-requirements-checklists/PAT-013-Software-Requirements-Checklist.docx", "bytes": 45726, "sha256": "73c5b08f354ff248cb1f0d8138fa7bacb182486374eb3f4f55ca89e868782d59"},
+        {"path": "Quality Rules KB/nasa-requirements-checklists/PAT-034-SA-Requirements-Analysis-Checklist.docx", "bytes": 42853, "sha256": "e40324ea763d9d8a7ad49791b7231262106934436f226a83fedafe9ae0a6436e"},
+        {"path": "Quality Rules KB/nasa-requirements-checklists/PAT-079-Requirements-Quality-Checklist.docx", "bytes": 41043, "sha256": "c1bc7897818fa0f1420af4753217c6fe129be116025f933ad44ca320e3d478f0"},
+        {"path": "Quality Rules KB/nasa-requirements-checklists/PAT-080-Requirements-Content-Checklist.docx", "bytes": 41658, "sha256": "62d55d7013c19a5215eac4605875dbae72568373e79995a3e393636b7a2f1cfd"},
+        {"path": "Quality Rules KB/nasa-requirements-checklists/PAT-081-Requirements-Editorial-Checklist.docx", "bytes": 36323, "sha256": "2797e8e0d9ac68f6121568d4f70554c2318132f40cac911cf6b6f3d884d1e143"}
+      ]
+    },
+    {
+      "id": "nist-ssdf-1.1-rules-table",
+      "category": "Quality Rules KB",
+      "source_url": "https://csrc.nist.gov/pubs/sp/800/218/final",
+      "license": "official US government publication; retain attribution",
+      "local_path": "Quality Rules KB/nist-ssdf-1.1",
+      "tasks": ["machine-readable secure development practices", "task and implementation-example rules"],
+      "assets": [{"path": "Quality Rules KB/nist-ssdf-1.1/nist.sp.800-218.ssdf-table.xlsx", "bytes": 50039, "sha256": "f5729c4c6c792cbf6cfbea74eee7cc84c579b2109006fe3cbfa8934eb460bd55"}]
+    }
+  ],
+  "known_gaps": [
+    {"id": "requirements-smell-8120", "status": "not_downloaded", "reason": "No verifiable public artifact with clear download and license was identified."},
+    {"id": "requirement-inconsistency-pairs", "status": "not_uniquely_identified", "reason": "The recommendation does not provide a paper, DOI or repository; current trace datasets are not inconsistency-pair ground truth."},
+    {"id": "cross-artifact-defect-benchmark", "status": "to_build", "reason": "Build controlled mutations from Project KB gold traces and record human validation."}
+  ]
+}

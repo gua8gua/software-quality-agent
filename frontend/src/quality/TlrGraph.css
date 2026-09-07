@@ -1,0 +1,24 @@
+.qm-graph-tools > span em {
+  color: #a2adbc;
+  font-style: normal;
+  margin-left: 12px;
+}
+
+.qm-graph {
+  background-color: #fbfcff;
+  background-image:
+    linear-gradient(90deg, #edf4ff80 0 34%, #fff 34% 66%, #edf8f480 66% 100%),
+    radial-gradient(#dce4f1 0.7px, transparent 0.7px);
+  background-size: 100% 100%, 18px 18px;
+  height: 520px;
+}
+
+@media (max-width: 800px) {
+  .qm-graph {
+    height: 430px;
+  }
+
+  .qm-graph-tools > span em {
+    display: none;
+  }
+}

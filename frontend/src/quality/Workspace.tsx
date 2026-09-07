@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowUpRight, ChevronRight, Database, Download, FileText, FolderOpen, GitBranch, Layers, Plus, RefreshCw, Search, Settings2, ShieldCheck, Upload } from "lucide-react";
-import { all, date, errorText, get, post, statusLabel, url, type Artifact, type Capabilities, type Dataset, type Project, type Run, type Visualization } from "./api";
+import { all, date, errorText, get, post, runDisplayStatus, statusLabel, url, type Artifact, type Capabilities, type Dataset, type Project, type Run, type Visualization } from "./api";
 import { Alert, Empty, Loading, Pager } from "./common";
 import { NewProject, UploadDialog } from "./Dialogs";
 import { Results } from "./Results";
@@ -27,10 +27,17 @@ export default function Workspace() {
   const queue = useRef(Promise.resolve());
   const begin = useCallback((value: Run | Run[]) => {
     const runs=Array.isArray(value)?value:[value];if(!runs.length)return;
+    const batchId=Array.isArray(value)?runs[0].config.plan_id:undefined;
+    if(batchId&&runs.every(run=>run.config.plan_id===batchId)){
+      const key=`batch:${batchId}`;if(executing.current.has(key))return;executing.current.add(key);
+      navigate(projectPath(runs[0].project_id));setActionError("");
+      void post<{failures:{run_id:string;message:string}[]}>(`/plans/${batchId}/resume`,tenant,runs[0].project_id).then(result=>{if(result.failures.length)setActionError(`批次中有 ${result.failures.length} 个任务仍未完成：${result.failures.map(item=>item.run_id.slice(0,8)).join("、")}`);}).catch(e=>setActionError(errorText(e))).finally(()=>{executing.current.delete(key);setRefresh(v=>v+1);});
+      return;
+    }
     navigate(runs.length===1?`${projectPath(runs[0].project_id)}/runs/${runs[0].id}`:projectPath(runs[0].project_id));
     for(const run of runs){
       if(executing.current.has(run.id))continue;executing.current.add(run.id);
-      queue.current=queue.current.then(async()=>{setActionError("");try{await post<Run>(`/runs/${run.id}/execute`,tenant,run.project_id);}catch(e){setActionError(errorText(e));}finally{executing.current.delete(run.id);setRefresh(v=>v+1);}});
+      queue.current=queue.current.then(async()=>{setActionError("");try{const resume=run.status==="failed"||(run.status==="completed"&&run.stage==="completed_with_errors");await post<Run>(`/runs/${run.id}/${resume?"resume":"execute"}`,tenant,run.project_id);}catch(e){setActionError(errorText(e));}finally{executing.current.delete(run.id);setRefresh(v=>v+1);}});
     }
   }, [tenant]);
   const project = route[0] === "projects" ? route[1] : undefined;
@@ -90,9 +97,9 @@ function ProjectPage({ tenant, projectId, capabilities, kinds, begin, refresh }:
       {tab === "data" && <><div className="qm-toolbar qm-inset"><label className="qm-inline-label">资料快照<select value={datasetId} onChange={e => { setDatasetId(e.target.value); setKind("all"); setSearch(""); }} aria-label="资料快照">{!datasets.length && <option value="">暂无快照</option>}{datasets.map(d => <option value={d.id} key={d.id}>{d.version} · {date(d.created_at)}</option>)}</select></label><input aria-label="搜索制品" placeholder="搜索标识或文件名…" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} /><select value={kind} aria-label="筛选文件业务类型" onChange={e => { setKind(e.target.value); setPage(0); }}><option value="all">全部业务类型</option>{[...new Set(artifacts.map(a => a.kind))].map(k => <option key={k} value={k}>{kinds.get(k) || k}</option>)}</select></div>
         {inventoryError ? <Alert>{inventoryError}</Alert> : inventoryLoading ? <Loading /> : !filtered.length ? <Empty title={artifacts.length ? "没有匹配的资料" : "尚未上传项目资料"}><p>每个文件都需指定所属项目与业务类型。</p><button disabled={!capabilities} onClick={() => setUpload(true)}>上传本地文件</button></Empty> : <><div className="qm-table-wrap"><table><thead><tr><th>资料标识 / 文件</th><th>业务类型</th><th>版本</th><th>正文字符数</th><th>原始文件</th><th /></tr></thead><tbody>{filtered.slice(page * 20, (page + 1) * 20).map(a => <tr key={a.id}><td><a className="qm-artifact-name" href={`#${projectPath(projectId)}/artifacts/${a.id}`}><FileText size={17} /><span>{a.structure?.title || a.structure?.original_id || a.external_id}<small>{a.locator || "未提供文件位置"}</small></span></a></td><td><span className="qm-type">{kinds.get(a.kind) || a.kind}</span></td><td>{a.revision}</td><td className="qm-mono">{a.characters?.toLocaleString()}</td><td>{a.structure?.content_status === "reference_only" ? "仅有引用" : a.original_file_id ? "已保存" : "文本导入"}</td><td><a className="qm-text-link" href={`#${projectPath(projectId)}/artifacts/${a.id}`}>查看详情 <ChevronRight size={14} /></a></td></tr>)}</tbody></table></div><Pager page={page} size={20} total={filtered.length} set={setPage} /></>}
       </>}
-      {tab === "structure" && <StructureTree artifacts={artifacts} project={projectId} />}
-      {tab === "runs" && <LayerRunMatrix runs={runs} project={projectId} datasetId={datasetId} />}
-      {tab === "runs" && (!runs.length ? <Empty title="还没有 TLR 运行记录"><p>上传至少两份资料后，选择源与目标进行检测。</p></Empty> : <><div className="qm-table-wrap"><table><thead><tr><th>运行 / 创建时间</th><th>资料快照</th><th>状态</th><th>已判定 / 候选</th><th>最终链接</th><th /></tr></thead><tbody>{runs.slice(runPage * 20, (runPage + 1) * 20).map(r => <tr key={r.id}><td><code>{r.id.slice(0, 8)}</code><small>{date(r.created_at)}</small></td><td>{r.config.layer_pair?.join(" → ")}<small>{r.config.plan_id?.slice(0,8)}</small>{datasets.find(d => d.id === r.dataset_id)?.version || r.dataset_id.slice(0, 8)}</td><td><span className={`qm-badge ${r.status}`}>{statusLabel[r.status]}</span></td><td>{r.counts.classified || 0} / {r.counts.candidates || 0}</td><td>{r.status === "completed" ? r.counts.links || 0 : "—"}</td><td><a className="qm-text-link" href={`#${projectPath(projectId)}/runs/${r.id}`}>查看结果 <ChevronRight size={14} /></a></td></tr>)}</tbody></table></div><Pager page={runPage} size={20} total={runs.length} set={setRunPage} /></>)}
+      {tab === "structure" && <StructureTree artifacts={artifacts} datasetId={datasetId} tenant={tenant} project={projectId} />}
+      {tab === "runs" && <LayerRunMatrix runs={runs} project={projectId} datasetId={datasetId} resume={begin} />}
+      {tab === "runs" && (!runs.length ? <Empty title="还没有 TLR 运行记录"><p>上传至少两份资料后，选择源与目标进行检测。</p></Empty> : <><div className="qm-table-wrap"><table><thead><tr><th>运行 / 创建时间</th><th>资料快照 / 批次</th><th>状态</th><th>已判定 / 候选</th><th>最终链接</th><th /></tr></thead><tbody>{runs.slice(runPage * 20, (runPage + 1) * 20).map(r => { const display = runDisplayStatus(r); return <tr key={r.id}><td><code>{r.id.slice(0, 8)}</code><small>{date(r.created_at)}</small></td><td>{r.config.layer_pair?.join(" → ")}<small>{r.config.batch_label || (r.config.plan_id ? `批次 ${r.config.plan_id.slice(0,8)}` : "单次运行")}</small>{datasets.find(d => d.id === r.dataset_id)?.version || r.dataset_id.slice(0, 8)}</td><td><span className={`qm-badge ${display}`}>{statusLabel[display]}</span></td><td>{r.counts.classified || 0} / {r.counts.candidates || 0}</td><td>{r.status === "completed" ? r.counts.links || 0 : "—"}</td><td><a className="qm-text-link" href={`#${projectPath(projectId)}/runs/${r.id}`}>查看结果 <ChevronRight size={14} /></a></td></tr>})}</tbody></table></div><Pager page={runPage} size={20} total={runs.length} set={setRunPage} /></>)}
     </section>
     {upload && capabilities && <UploadDialog tenant={tenant} project={project} dataset={dataset} capabilities={capabilities} close={() => setUpload(false)} saved={ds => { setUpload(false); setDatasets(old => [ds, ...old]); setDatasetId(ds.id); setTab("data"); setTick(v => v + 1); }} />}
     {analysis && dataset && <LayerAnalysis tenant={tenant} project={project} dataset={dataset} artifacts={artifacts} kinds={kinds} close={() => setAnalysis(false)} created={r => { setAnalysis(false); setRuns(old=>[...r,...old]); setTab("runs"); begin(r); }} />}
@@ -110,6 +117,7 @@ function ArtifactPage({ tenant, project, id, kinds }: { tenant: string; project:
 const stages = [ ["preprocessing", "预处理"], ["embedding", "向量化"], ["retrieval", "候选检索"], ["classification", "逐对判定"], ["aggregation", "链接聚合"], ["completed", "完成"] ];
 function RunPage({ tenant, project, id, refresh, begin }: { tenant: string; project: string; id: string; refresh: number; begin: (r: Run | Run[]) => void }) {
   const [run, setRun] = useState<Run | null>(null), [data, setData] = useState<Visualization | null>(null), [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const [batchRuns, setBatchRuns] = useState<Run[]>([]);
   const [error, setError] = useState(""), [tick, setTick] = useState(0);
   useEffect(() => {
     let active = true; let timer: ReturnType<typeof setTimeout>;
@@ -120,13 +128,18 @@ function RunPage({ tenant, project, id, refresh, begin }: { tenant: string; proj
     } void load(); return () => { active = false; clearTimeout(timer); };
   }, [tenant, project, id, refresh, tick]);
   const datasetId = run?.dataset_id, status = run?.status;
+  const planId = run?.config.plan_id;
   useEffect(() => { if (!datasetId) return; let active = true; all<Artifact>(`/datasets/${datasetId}/inventory`, tenant, project).then(a => { if (active) setArtifacts(a); }).catch(e => { if (active) setError(errorText(e)); }); return () => { active = false; }; }, [datasetId, tenant, project]);
+  useEffect(() => { if (!planId) { setBatchRuns([]); return; } let active = true; get<{runs:Run[]}>(`/plans/${planId}/runs`, tenant, project).then(value => { if (active) setBatchRuns(value.runs); }).catch(e => { if (active) setError(errorText(e)); }); return () => { active = false; }; }, [planId, tenant, project, refresh, tick]);
   useEffect(() => { if (!status) return; let active = true; get<Visualization>(`/runs/${id}/visualization`, tenant, project).then(value => { if (active) setData(value); }).catch(e => { if (active) setError(errorText(e)); }); return () => { active = false; }; }, [tenant, project, id, status, refresh, tick]);
   const onArtifact = useCallback((artifactId: string) => navigate(`${projectPath(project)}/artifacts/${artifactId}`), [project]);
   if (!run) return error ? <Alert>{error}</Alert> : <Loading />;
   const step = stages.findIndex(s => s[0] === run.stage);
-  return <><a className="qm-back" href={`#${projectPath(project)}`}><ArrowLeft size={15} />返回项目资料</a><div className="qm-heading"><div><div className="qm-eyebrow">TRACEABILITY RUN / {run.id.slice(0, 8)}</div><h1>TLR 检测结果 <span className={`qm-badge ${run.status}`}>{statusLabel[run.status]}</span></h1><p>创建于 {date(run.created_at)} · 每次检测独立保留输入与结果</p></div><div className="qm-toolbar"><button onClick={() => setTick(v => v + 1)}><RefreshCw size={16} />刷新结果</button>{run.status === "pending" && <button className="qm-primary" onClick={() => begin(run)}>执行此运行</button>}</div></div>
-    {error && <Alert>{error}</Alert>}{run.status === "failed" && <Alert>检测在“{stages.find(s => s[0] === run.stage)?.[1] || run.stage}”阶段失败（{run.error}）。已保存中间数据；修正配置后可返回项目重新检测。</Alert>}
+  const displayStatus = runDisplayStatus(run);
+  const canResume = (run.status === "failed" || (run.status === "completed" && run.stage === "completed_with_errors")) && (run.counts.candidates || 0) > (run.counts.classified || 0);
+  return <><a className="qm-back" href={`#${projectPath(project)}`}><ArrowLeft size={15} />返回项目资料</a><div className="qm-heading"><div><div className="qm-eyebrow">TRACEABILITY RUN / {run.id.slice(0, 8)}</div><h1>TLR 检测结果 <span className={`qm-badge ${displayStatus}`}>{statusLabel[displayStatus]}</span></h1><p>{run.config.batch_label || (run.config.plan_id ? `批次 ${run.config.plan_id.slice(0,8)}` : "单次运行")} · 创建于 {date(run.created_at)}</p></div><div className="qm-toolbar"><button onClick={() => setTick(v => v + 1)}><RefreshCw size={16} />刷新结果</button>{run.status === "pending" && <button className="qm-primary" onClick={() => begin(run)}>执行此运行</button>}{canResume && <button className="qm-primary" onClick={() => begin(run)}>从断点继续此运行</button>}</div></div>
+    {error && <Alert>{error}</Alert>}{run.status === "failed" && <Alert>检测在“{stages.find(s => s[0] === run.stage)?.[1] || run.stage}”阶段失败（{run.error}）。已保存中间数据；修正配置后可返回项目重新检测。</Alert>}{displayStatus === "partial" && <div className="qm-notice">分析已完成可用部分，但有 {Array.isArray(run.manifest.node_failures) ? run.manifest.node_failures.length : 0} 个节点失败；结果中已保留并标注失败节点，未判定节点不能视为无关联。</div>}
+    {planId&&<LayerRunMatrix runs={batchRuns} project={project} datasetId={run.dataset_id} resume={begin} fixedPlanId={planId} currentRunId={run.id} />}
     <div className="qm-steps">{stages.map(([key, label], index) => <div key={key} className={index < step || run.status === "completed" ? "done" : index === step ? "current" : ""}><span>{index + 1}</span>{label}</div>)}</div>
     <div className="qm-summary-strip"><div><strong>{run.config.source_ids.length}</strong><span>源制品</span></div><div><strong>{run.config.target_ids.length}</strong><span>目标制品</span></div><div><strong>{run.counts.classified || 0}<small> / {run.counts.candidates || 0}</small></strong><span>已判定 / 候选对</span></div><div><strong>{run.status === "completed" ? run.counts.links || 0 : "—"}</strong><span>最终追踪链接</span></div></div>
     {data ? <Results run={run} data={data} artifacts={artifacts} tenant={tenant} project={project} onArtifact={onArtifact} /> : <Loading />}

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { type Artifact, type Dataset, type Project, type Run, get, post, errorText, statusLabel } from "./api";
+import { type Artifact, type Dataset, type Project, type Run, get, post, errorText, runDisplayStatus, statusLabel } from "./api";
 import { Alert, Loading, Modal } from "./common";
 import { AnalysisDialog as ManualAnalysis } from "./Dialogs";
 
@@ -28,13 +28,20 @@ export function LayerAnalysis({tenant,project,dataset,artifacts,kinds,close,crea
   </form></Modal>;
 }
 
-export function LayerRunMatrix({runs,project,datasetId}:{runs:Run[];project:string;datasetId:string}){
+const resumableRun = (run: Run) => run.status === "pending" || (
+  (run.status === "failed" || (run.status === "completed" && run.stage === "completed_with_errors")) &&
+  (run.counts.candidates || 0) > (run.counts.classified || 0)
+);
+
+export function LayerRunMatrix({runs,project,datasetId,resume,fixedPlanId,currentRunId}:{runs:Run[];project:string;datasetId:string;resume:(runs:Run[])=>void;fixedPlanId?:string;currentRunId?:string}){
   const available=runs.filter(r=>r.dataset_id===datasetId&&r.config.plan_id);
   const ids=[...new Set(available.map(r=>r.config.plan_id!))];
-  const [selected,setSelected]=useState("");const current=ids.includes(selected)?selected:ids[0];
+  const [selected,setSelected]=useState("");const current=fixedPlanId&&ids.includes(fixedPlanId)?fixedPlanId:ids.includes(selected)?selected:ids[0];
   const rows=available.filter(r=>r.config.plan_id===current);
+  const resumable=rows.filter(resumableRun);
+  const label=rows[0]?.config.batch_label||`批次 ${current?.slice(0,8)||""}`;
   const names:Record<string,string>={context:"背景/风险",requirements:"需求",architecture:"架构/接口",design:"设计",implementation:"代码",verification:"测试",assurance:"评审/其它",operation:"发布/运维"};
   const layers=Object.keys(names).filter(k=>rows.some(r=>r.config.layer_pair?.includes(k)));
   if(!rows.length)return null;
-  return <section className="qm-inset"><div className="qm-toolbar"><h3>层间运行矩阵</h3><select aria-label="选择比较批次" value={current} onChange={e=>setSelected(e.target.value)}>{ids.map(id=><option key={id} value={id}>批次 {id.slice(0,8)}</option>)}</select></div><div className="qm-table-wrap"><table><thead><tr><th>源 ↓ / 目标 →</th>{layers.map(l=><th key={l}>{names[l]}</th>)}</tr></thead><tbody>{layers.map(s=><tr key={s}><th>{names[s]}</th>{layers.map(t=>{const r=rows.find(r=>r.config.layer_pair?.[0]===s&&r.config.layer_pair?.[1]===t);return <td key={t}>{r?<a href={"#/projects/"+encodeURIComponent(project)+"/runs/"+r.id}><span className={"qm-badge "+r.status}>{statusLabel[r.status]}</span><small>{r.status==="completed"?(r.counts.links||0)+" 条链接":"查看运行"}</small></a>:"—"}</td>})}</tr>)}</tbody></table></div></section>
+  return <section className="qm-inset"><div className="qm-toolbar"><h3>{label} · {rows.length} 个任务</h3>{!fixedPlanId&&<select aria-label="选择比较批次" value={current} onChange={e=>setSelected(e.target.value)}>{ids.map(id=>{const row=available.find(run=>run.config.plan_id===id);return <option key={id} value={id}>{row?.config.batch_label||`批次 ${id.slice(0,8)}`}</option>})}</select>}<button className="qm-primary" disabled={!resumable.length} onClick={()=>resume(resumable)}>恢复整个批次（{resumable.length}）</button></div><div className="qm-table-wrap"><table><thead><tr><th>源 ↓ / 目标 →</th>{layers.map(l=><th key={l}>{names[l]}</th>)}</tr></thead><tbody>{layers.map(s=><tr key={s}><th>{names[s]}</th>{layers.map(t=>{const r=rows.find(r=>r.config.layer_pair?.[0]===s&&r.config.layer_pair?.[1]===t);if(!r)return <td key={t}>—</td>;const display=runDisplayStatus(r);return <td key={t} className={r.id===currentRunId?"current":""}><a href={"#/projects/"+encodeURIComponent(project)+"/runs/"+r.id}><span className={"qm-badge "+display}>{statusLabel[display]}</span><small>{r.status==="completed"?(r.counts.links||0)+" 条链接":r.status==="pending"?"等待执行":r.status==="running"?"正在执行":"可从断点恢复"}</small></a></td>})}</tr>)}</tbody></table></div></section>
 }

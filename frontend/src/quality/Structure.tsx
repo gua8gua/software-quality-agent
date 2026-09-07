@@ -1,21 +1,22 @@
 import { useMemo, useState, useEffect } from "react";
-import { all, errorText, type Artifact } from "./api";
+import { all, errorText, get, type Artifact, type HierarchyNode } from "./api";
 import { Alert, Empty } from "./common";
 const href=(project:string,id:string)=>"#/projects/"+encodeURIComponent(project)+"/artifacts/"+id;
 const title=(a:Artifact)=>a.structure?.title||a.structure?.original_id||a.external_id;
 
-function Branch({artifact,children,lookup,path,project}:{artifact:Artifact;children:Map<string,Artifact[]>;lookup:Map<string,Artifact>;path:string[];project:string}){
-  const [open,setOpen]=useState(false); const descendants=children.get(artifact.external_id)||[];
-  if(path.includes(artifact.external_id))return <li>循环引用：<a href={href(project,artifact.id)}>{title(artifact)}</a></li>;
-  return <li><div className="qm-structure-node">{descendants.length?<button aria-label={"展开 "+title(artifact)} onClick={()=>setOpen(v=>!v)}>{open?"−":"+"}</button>:<span>·</span>}<a href={href(project,artifact.id)}>{title(artifact)}</a><span className="qm-type">{artifact.structure?.original_type||artifact.kind}</span>{artifact.structure?.content_status==="reference_only"&&<small>仅有引用</small>}{!!descendants.length&&<small>{descendants.length} 个直接关联</small>}</div>{open&&path.length<20&&<ul>{descendants.map(a=><Branch key={a.id} artifact={a} children={children} lookup={lookup} path={[...path,artifact.external_id]} project={project}/>)}</ul>}{open&&path.length>=20&&<small>层级过深，请进入制品详情继续浏览。</small>}</li>
+function Branch({node,children,artifacts,project}:{node:HierarchyNode;children:Map<string,HierarchyNode[]>;artifacts:Map<string,Artifact>;project:string}){
+  const [open,setOpen]=useState(false), descendants=children.get(node.id)||[], artifact=node.artifact_id?artifacts.get(node.artifact_id):undefined;
+  return <li><div className={`qm-structure-node ${node.artifact_id?"":"pure"}`}>{descendants.length?<button aria-label={`${open?"折叠":"展开"} ${node.title}`} onClick={()=>setOpen(v=>!v)}>{open?"−":"+"}</button>:<span>·</span>}{artifact?<a href={href(project,artifact.id)}>{node.title}</a>:<strong>{node.title}</strong>}<span className="qm-type">{node.node_type}</span>{!node.artifact_id&&<small>结构节点</small>}{!!descendants.length&&<small>{descendants.length} 个直接子节点</small>}</div>{open&&<ul>{descendants.map(child=><Branch key={child.id} node={child} children={children} artifacts={artifacts} project={project}/>)}</ul>}</li>
 }
-export function StructureTree({artifacts,project}:{artifacts:Artifact[];project:string}){
-  const [search,setSearch]=useState("");
-  const lookup=useMemo(()=>new Map(artifacts.map(a=>[a.external_id,a])),[artifacts]);
-  const children=useMemo(()=>{const m=new Map<string,Artifact[]>();for(const a of artifacts)for(const p of a.structure?.parent_ids||[]){const rows=m.get(p)||[];rows.push(a);m.set(p,rows);}return m;},[artifacts]);
-  const roots=artifacts.filter(a=>!(a.structure?.parent_ids||[]).some(p=>lookup.has(p)));
-  const matches=artifacts.filter(a=>(title(a)+" "+a.external_id).toLowerCase().includes(search.toLowerCase()));
-  return <div className="qm-inset"><p className="qm-muted">展示数据集提供的关系树。SAFA 的父子边表示原始追踪关系，不表示文件夹包含，也不等于本次模型生成的 TLR。一个制品可出现在多个父节点下。</p><input aria-label="搜索结构节点" placeholder="搜索节点名称或标识…" value={search} onChange={e=>setSearch(e.target.value)}/>{!artifacts.some(a=>a.structure?.parent_ids?.length)&&<Empty title="该快照没有提供父子关系"><p>仍可查看资料；不会根据相似度伪造目录结构。</p></Empty>}<ul className="qm-structure-tree">{(search?matches.slice(0,100):roots).map(a=><Branch key={a.id} artifact={a} children={children} lookup={lookup} path={[]} project={project}/>)}</ul>{search&&matches.length>100&&<p>搜索只显示前 100 个节点，请缩小关键词。</p>}</div>
+export function StructureTree({artifacts,datasetId,tenant,project}:{artifacts:Artifact[];datasetId:string;tenant:string;project:string}){
+  const [nodes,setNodes]=useState<HierarchyNode[]>([]),[search,setSearch]=useState(""),[error,setError]=useState("");
+  useEffect(()=>{let active=true;if(!datasetId){setNodes([]);return}get<HierarchyNode[]>(`/datasets/${datasetId}/hierarchy`,tenant,project).then(value=>{if(active)setNodes(value)}).catch(e=>{if(active)setError(errorText(e))});return()=>{active=false}},[datasetId,tenant,project]);
+  const artifactMap=useMemo(()=>new Map(artifacts.map(a=>[a.id,a])),[artifacts]);
+  const nodeMap=useMemo(()=>new Map(nodes.map(node=>[node.id,node])),[nodes]);
+  const children=useMemo(()=>{const value=new Map<string,HierarchyNode[]>();for(const node of nodes){if(!node.parent_id)continue;const rows=value.get(node.parent_id)||[];rows.push(node);value.set(node.parent_id,rows)}return value},[nodes]);
+  const matches=nodes.filter(node=>`${node.title} ${node.node_key} ${node.node_type}`.toLowerCase().includes(search.toLowerCase()));
+  const shown=search?matches.slice(0,100):nodes.filter(node=>!node.parent_id||!nodeMap.has(node.parent_id));
+  return <div className="qm-inset"><p className="qm-muted">这里展示数据集持久化的层级。结构节点可以没有正文，也可以关联有正文的 Artifact；只有后者能进入 TLR。</p>{error&&<Alert>{error}</Alert>}<div className="qm-toolbar qm-structure-tools"><input aria-label="搜索结构节点" placeholder="搜索名称、标识或类型…" value={search} onChange={e=>setSearch(e.target.value)}/></div>{!shown.length&&<Empty title="该快照没有层级节点" />}<ul className="qm-structure-tree">{shown.map(node=><Branch key={node.id} node={node} children={children} artifacts={artifactMap} project={project}/>)}</ul>{search&&matches.length>100&&<p>搜索仅显示前 100 个结果。</p>}</div>
 }
 
 export function StructureDetail({artifact,tenant,project}:{artifact:Artifact;tenant:string;project:string}){

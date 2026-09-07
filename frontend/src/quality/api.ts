@@ -7,20 +7,26 @@ export interface Run {
   id: string; project_id: string; dataset_id: string; status: string; stage: string; created_at: string;
   finished_at: string | null; counts: Record<string, number>; error: string | null;
   manifest: Record<string, unknown>;
-  config: { plan_id?: string; layer_pair?: string[]; source_ids: string[]; target_ids: string[]; options: Record<string, unknown> };
+  config: { plan_id?: string; batch_label?: string; batch_index?: number; layer_pair?: string[]; source_ids: string[]; target_ids: string[]; options: Record<string, unknown> };
 }
 export interface Element { id: string; artifact_id: string; external_id: string; role: string }
 export interface Candidate { id: string; source_element_id: string; target_element_id: string; rank: number; similarity: number; decision: string }
 export interface Link { id: string; source_artifact_id: string; target_artifact_id: string; relation: string; evidence_candidate_ids: string[] }
-export interface Visualization { elements: Element[]; candidates: Candidate[]; links: Link[] }
+export interface HierarchyNode { id: string; dataset_id: string; parent_id: string | null; artifact_id: string | null; node_key: string; title: string; node_type: string; ordinal: number; metadata_json: Record<string, unknown> }
+export interface ProjectionNode extends HierarchyNode { hierarchy_node_id: string; role: "source" | "target"; pure_structure: boolean; collapsed: boolean; has_children: boolean; descendant_artifact_count: number; related_link_count: number }
+export interface ProjectionLink { id: string; source: string; target: string; count: number; underlying_link_ids: string[]; links: Link[] }
+export interface FailureNode { stage: string; node_type: string; error_type?: string; message?: string; external_id?: string; role?: string; artifact_id?: string; element_id?: string; candidate_id?: string; source_element_id?: string; target_element_id?: string }
+export interface Visualization { elements: Element[]; candidates: Candidate[]; links: Link[]; hierarchy: HierarchyNode[]; projection: { nodes: ProjectionNode[]; links: ProjectionLink[] }; failures: FailureNode[] }
 export interface Capabilities { kinds: { id: string; label: string }[]; extensions: string[]; max_file_bytes: number; max_files: number; embedding_configured: boolean; llm_configured: boolean }
-export interface ModelItem { id: string; owned_by: string }
-export interface ModelConnection { id: string; name: string; provider: string; base_url: string; is_local: boolean; api_key_configured: boolean; models: ModelItem[]; status: string; status_message: string; last_checked_at: string | null }
+export type ModelCapability = "chat" | "embedding" | "rerank" | "vision" | "image_generation" | "speech" | "transcription" | "unknown";
+export interface ModelItem { id: string; owned_by: string; capabilities: ModelCapability[]; capability_source: "provider" | "ollama" | "probe" | "manual" | "unknown"; format: string | null; family: string | null; parameter_size: string | null; quantization_level: string | null; embedding_dimension: number | null; verification: Record<string, string> }
+export interface ModelProvider { id: "deepseek" | "local_openai" | "custom"; label: string; description: string; default_base_url: string | null; base_url_editable: boolean; api_key_required: boolean; is_local: boolean; capabilities: Array<"embedding" | "chat"> }
+export interface ModelConnection { id: string; name: string; provider: string; provider_label: string; capabilities: Array<"embedding" | "chat">; base_url: string; is_local: boolean; api_key_configured: boolean; models: ModelItem[]; status: string; status_message: string; last_checked_at: string | null }
 export interface ModelTask { id: "tlr_embedding" | "tlr_classification" | "architecture_extraction"; label: string; description: string; capability: "embedding" | "chat" }
 export interface ModelBinding { task: ModelTask["id"]; connection_id: string | null; model_id: string | null; dimension: number | null; test_status: string; test_message: string; last_tested_at: string | null; fallback?: { source: string; base_url: string; model_id: string; api_key_configured: boolean } }
-export interface ModelConfig { connections: ModelConnection[]; tasks: ModelTask[]; bindings: ModelBinding[] }
+export interface ModelConfig { providers: ModelProvider[]; connections: ModelConnection[]; tasks: ModelTask[]; bindings: ModelBinding[] }
 export interface Evidence {
-  candidate: Candidate & { evidence: { related?: boolean; evidence?: string; source_quote?: string; target_quote?: string; validation_status?: string; raw_response?: unknown } | null };
+  candidate: Candidate & { evidence: { related?: boolean; evidence?: string; source_quote?: string; target_quote?: string; validation_status?: string; error_type?: string; message?: string; reason?: string; raw_response?: unknown } | null };
   source: { artifact_id: string; external_id: string; kind: string; start: number; end: number; content: string; processing?: Record<string, unknown> };
   target: { artifact_id: string; external_id: string; kind: string; start: number; end: number; content: string; processing?: Record<string, unknown> };
 }
@@ -45,9 +51,11 @@ export const get = <T,>(path: string, tenant: string, project?: string) => reque
 export const post = <T,>(path: string, tenant: string, project: string | undefined, body?: unknown) => request<T>(url(path, tenant, project), { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
 export const modelUrl = (path: string, tenant: string) => `${apiRoot}/model-config${path}?${new URLSearchParams({ tenant_id: tenant })}`;
 export const getModelConfig = (tenant: string) => request<ModelConfig>(modelUrl("", tenant));
-export const createModelConnection = (tenant: string, body: { name: string; base_url: string; api_key?: string }) => request<ModelConnection>(modelUrl("/connections", tenant), { method: "POST", body: JSON.stringify(body) });
-export const updateModelConnection = (tenant: string, id: string, body: { name: string; base_url: string; api_key?: string }) => request<ModelConnection>(modelUrl(`/connections/${encodeURIComponent(id)}`, tenant), { method: "PUT", body: JSON.stringify(body) });
+export interface ModelConnectionInput { name: string; provider: ModelProvider["id"]; base_url?: string; api_key?: string }
+export const createModelConnection = (tenant: string, body: ModelConnectionInput) => request<ModelConnection>(modelUrl("/connections", tenant), { method: "POST", body: JSON.stringify(body) });
+export const updateModelConnection = (tenant: string, id: string, body: ModelConnectionInput) => request<ModelConnection>(modelUrl(`/connections/${encodeURIComponent(id)}`, tenant), { method: "PUT", body: JSON.stringify(body) });
 export const refreshModelConnection = (tenant: string, id: string) => request<ModelConnection>(modelUrl(`/connections/${encodeURIComponent(id)}/refresh`, tenant), { method: "POST" });
+export const updateModelMetadata = (tenant: string, connectionId: string, modelId: string, capabilities: ModelCapability[]) => request<ModelItem>(modelUrl(`/connections/${encodeURIComponent(connectionId)}/models/${encodeURIComponent(modelId)}`, tenant), { method: "PUT", body: JSON.stringify({ capabilities }) });
 export const deleteModelConnection = (tenant: string, id: string) => request<boolean>(modelUrl(`/connections/${encodeURIComponent(id)}`, tenant), { method: "DELETE" });
 export const bindModelTask = (tenant: string, task: string, body: { connection_id: string; model_id: string; dimension?: number }) => request<ModelBinding>(modelUrl(`/tasks/${encodeURIComponent(task)}`, tenant), { method: "PUT", body: JSON.stringify(body) });
 export const testModelTask = (tenant: string, task: string) => request<ModelBinding>(modelUrl(`/tasks/${encodeURIComponent(task)}/test`, tenant), { method: "POST" });
@@ -64,5 +72,6 @@ export async function all<T>(path: string, tenant: string, project?: string): Pr
 export const uploadFiles = (project: string, tenant: string, data: FormData) => request<Dataset>(url(`/projects/${encodeURIComponent(project)}/upload`, tenant), { method: "POST", body: data });
 export const errorText = (error: unknown) => error instanceof Error ? error.message : "操作失败，请重试。";
 export const date = (value: string | null) => value ? new Date(value).toLocaleString("zh-CN", { hour12: false }) : "—";
-export const statusLabel: Record<string, string> = { pending: "待执行", running: "分析中", completed: "已完成", failed: "失败" };
+export const statusLabel: Record<string, string> = { pending: "待执行", running: "分析中", completed: "已完成", partial: "部分完成", failed: "失败" };
+export const runDisplayStatus = (run: Run) => run.stage === "completed_with_errors" ? "partial" : run.status;
 export const decisionLabel: Record<string, string> = { pending: "尚未判定", related: "正向判定", unrelated: "无关联判定" };
