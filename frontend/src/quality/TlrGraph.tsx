@@ -491,7 +491,7 @@ export function TlrGraph({
     // Nodes are locked against user movement after each layout. Temporarily unlock them so
     // ELK can recompute every remaining node after an expand/collapse projection change.
     cy.nodes().unlock();
-    container.current.dataset.layoutReady = "false";
+    if (container.current) container.current.dataset.layoutReady = "false";
     const task = (async () => {
       await runElk(cy, "source", layouts);
       if (generation !== layoutGeneration.current) return;
