@@ -34,6 +34,7 @@ class TraceLinkSummary(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    # 创建一个 Pydantic 模型类 ChatRequest时, 自动去掉所有变量字符串首尾空格
     model_config = ConfigDict(str_strip_whitespace=True)
 
     project_id: str

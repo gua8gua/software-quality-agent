@@ -5,6 +5,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # 对于继承自 BaseSettings 的类，类中必须有 model_config 属性，且必须是 SettingsConfigDict 类型的实例。
+    # 才能读取 .env 文件中的环境变量，并将其映射到类的属性中。
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
