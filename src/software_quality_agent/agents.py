@@ -306,10 +306,11 @@ class ReportAgent:
 
 
 class RequirementDecompositionAgent:
-    """Extracts requirement statements in small local batches without a global reduce."""
+    """Extracts and consolidates requirements into code-sized business capabilities."""
 
     batch_char_limit = 6000
     max_concurrency = 4
+    consolidation_char_limit = 16000
 
     def __init__(self, llm: LLMClient) -> None:
         self.llm = llm
@@ -336,6 +337,7 @@ class RequirementDecompositionAgent:
             for result in batch_results
             for statement in result
         )
+        statements = await self._consolidate(statements)
         requirements = [
             RequirementPoint(
                 requirement_id=f"REQ-{index:03d}",
@@ -377,9 +379,12 @@ class RequirementDecompositionAgent:
         async with self._semaphore:
             answer = await self.llm.chat(
                 system_prompt=(
-                    "你是需求识别器。只从输入段落中提取明确的、可实现的项目需求。"
+                    "你是软件需求分析师。只提取明确、可实现的业务能力。"
+                    "一条需求应对应一个完整功能、接口或业务流程，而不是一个字段、"
+                    "一个按钮、一个校验规则或一个异常分支。"
+                    "同一功能的输入、处理、输出、权限和异常处理必须合并为一条需求。"
                     "忽略背景、愿景、价值描述、技术建议和重复内容。"
-                    "每条需求只保留一句简洁陈述。必须返回合法 JSON，不要 Markdown。"
+                    "每条需求用一句完整的话描述，必须返回合法 JSON，不要 Markdown。"
                 ),
                 user_prompt=(
                     f"这是第 {index} 批项目文档段落。\n"
@@ -396,6 +401,50 @@ class RequirementDecompositionAgent:
             candidate = RequirementCandidate.model_validate(item)
             results.append(candidate.statement)
         return results
+
+    async def _consolidate(self, statements: list[str]) -> list[str]:
+        """Merge fine-grained candidates into independently implementable capabilities."""
+        if len(statements) < 2:
+            return statements
+
+        numbered = "\n".join(
+            f"{index}. {statement}" for index, statement in enumerate(statements, start=1)
+        )
+        if len(numbered) > self.consolidation_char_limit:
+            raise ValueError(
+                "需求候选过多，无法在一次语义合并中处理；请缩小 PDF 批次后重试"
+            )
+
+        answer = await self.llm.chat(
+            system_prompt=(
+                "你是需求架构师，负责把候选需求整理成适合代码覆盖分析的需求单元。"
+                "请合并属于同一个业务能力、接口、服务或完整流程的细小需求。"
+                "例如“输入账号”“校验密码”“生成登录令牌”“登录失败提示”"
+                "应合并为一条“用户登录功能”，因为它们通常由同一组代码共同实现。"
+                "只有在两个需求可以由不同模块独立开发、独立测试时才保留为两条。"
+                "不要把一个完整功能拆成输入、处理、输出和异常四条。"
+                "不要合并两个无关业务能力，不要凭空添加文档中没有的能力。"
+                "每条结果应是一句完整的业务需求，保留必要的范围和约束。"
+                "必须返回合法 JSON，不要 Markdown。"
+            ),
+            user_prompt=(
+                "请整理下面的候选需求。\n"
+                '返回格式：{"requirements":[{"statement":"系统应..."}]}\n'
+                "要求：合并过细的需求；删除重复需求；保留相互独立的功能；"
+                "输出结果应比输入更接近一个需求对应一组可实现代码。\n\n"
+                f"候选需求：\n{numbered}"
+            ),
+            response_format={"type": "json_object"},
+            max_tokens=3000,
+        )
+        data = self._load_json(answer, stage="Requirement consolidation")
+        consolidated: list[str] = []
+        for item in data.get("requirements", []):
+            candidate = RequirementCandidate.model_validate(item)
+            consolidated.append(candidate.statement)
+        if not consolidated:
+            raise ValueError("Requirement consolidation 阶段未返回任何需求")
+        return self._deduplicate(consolidated)
 
     def _deduplicate(self, statements: Any) -> list[str]:
         unique: list[str] = []
