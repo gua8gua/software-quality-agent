@@ -517,6 +517,55 @@ select:focus {
   line-height: 1.5;
 }
 
+.error-text {
+  color: var(--red);
+}
+
+.upload-dropzone {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  border: 1px dashed rgba(37, 99, 235, 0.45);
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: var(--muted);
+  padding: 28px 18px;
+  text-align: center;
+}
+
+.upload-dropzone strong {
+  color: var(--text);
+}
+
+.upload-dropzone input {
+  width: auto;
+}
+
+.requirement-list {
+  display: grid;
+  gap: 12px;
+  max-height: 720px;
+  overflow: auto;
+}
+
+.requirement-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  padding: 12px;
+}
+
+.requirement-card p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.warning-list {
+  color: var(--amber);
+}
+
 .toast {
   position: fixed;
   right: 20px;

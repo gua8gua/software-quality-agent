@@ -10,6 +10,7 @@ import type {
   ReportResponse,
   ReportSummary,
   ReportType,
+  RequirementExtractionResponse,
   ViewId,
   WriteOperation,
 } from "./types";
@@ -145,4 +146,18 @@ export async function loadSchema(): Promise<DatabaseSchema> {
   } catch {
     return mockSchema;
   }
+}
+
+export async function extractRequirements(file: File): Promise<RequirementExtractionResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch(`${defaultBaseUrl}/api/requirements/extract`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `HTTP ${response.status}`);
+  }
+  return response.json() as Promise<RequirementExtractionResponse>;
 }

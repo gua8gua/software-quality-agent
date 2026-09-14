@@ -1,6 +1,7 @@
 import {
   Database,
   FileText,
+  FileUp,
   MessageSquareText,
   RefreshCw,
   Send,
@@ -17,6 +18,7 @@ import {
   loadSchema,
   readDatabase,
   sendChat,
+  extractRequirements,
   writeDatabase,
 } from "./api";
 import { mockMessages } from "./mock";
@@ -28,6 +30,7 @@ import type {
   ProjectSummary,
   ReportSummary,
   ReportType,
+  RequirementExtractionResponse,
   ViewId,
   WriteOperation,
 } from "./types";
@@ -35,6 +38,7 @@ import type {
 const views: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
   { id: "chat", label: "对话", icon: <MessageSquareText size={18} /> },
   { id: "report", label: "报告生成", icon: <FileText size={18} /> },
+  { id: "requirements", label: "需求拆分", icon: <FileUp size={18} /> },
   { id: "database", label: "数据库读写", icon: <Database size={18} /> },
 ];
 
@@ -132,6 +136,9 @@ function App() {
   const [reportSourceKinds, setReportSourceKinds] = useState<string[]>(["requirement", "design", "code", "test"]);
   const [reportPreview, setReportPreview] = useState("");
   const [reportHistory, setReportHistory] = useState<ReportSummary[]>([]);
+  const [requirementResult, setRequirementResult] = useState<RequirementExtractionResponse | null>(null);
+  const [requirementFile, setRequirementFile] = useState<File | null>(null);
+  const [requirementError, setRequirementError] = useState("");
   const [readScope, setReadScope] = useState<DatabaseScope>("artifacts");
   const [readKeyword, setReadKeyword] = useState("");
   const [readLimit, setReadLimit] = useState(20);
@@ -275,6 +282,25 @@ function App() {
         ...current,
       ]);
       notify("报告已生成");
+    } finally {
+      setBusy(false);
+    }
+
+  }
+
+  async function handleExtractRequirements() {
+    if (!requirementFile) {
+      setRequirementError("请先选择一个 PDF 文件");
+      return;
+    }
+    setBusy(true);
+    setRequirementError("");
+    try {
+      const response = await extractRequirements(requirementFile);
+      setRequirementResult(response);
+      notify(`已拆分 ${response.requirements.length} 条需求`);
+    } catch (error) {
+      setRequirementError(error instanceof Error ? error.message : "PDF 解析失败");
     } finally {
       setBusy(false);
     }
@@ -699,6 +725,89 @@ function App() {
     );
   }
 
+  function renderRequirementsView() {
+    return (
+      <section className="workspace-grid report-grid">
+        <article className="surface panel-primary">
+          <div className="panel-header">
+            <div>
+              <span className="eyebrow">需求工程</span>
+              <h3>上传项目 PDF，自动拆分需求</h3>
+            </div>
+            <FileText size={22} />
+          </div>
+          <p className="lead">
+            系统会提取 PDF 文本，调用需求分析 Agent，将项目内容拆分为可实现、可验证、可追踪的需求点。
+          </p>
+          <label className="upload-dropzone">
+            <FileUp size={28} />
+            <strong>{requirementFile?.name ?? "选择项目 PDF 文件"}</strong>
+            <span>仅支持 PDF，建议上传包含文本层的项目说明书</span>
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={(event) => {
+                setRequirementFile(event.target.files?.[0] ?? null);
+                setRequirementError("");
+              }}
+            />
+          </label>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={handleExtractRequirements}
+            disabled={busy || !requirementFile}
+          >
+            <Sparkles size={16} />
+            <span>{busy ? "解析中..." : "开始拆分需求"}</span>
+          </button>
+          {requirementError ? <p className="feedback error-text">{requirementError}</p> : null}
+          {requirementResult ? (
+            <div className="surface inset">
+              <div className="panel-header compact">
+                <div>
+                  <span className="eyebrow">项目理解</span>
+                  <h3>{requirementResult.source_filename}</h3>
+                </div>
+                <span className="mini-pill">{requirementResult.page_count} 页</span>
+              </div>
+              <p className="lead">{requirementResult.project_summary}</p>
+              {requirementResult.warnings.length ? (
+                <ul className="bullet-list warning-list">
+                  {requirementResult.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+        </article>
+
+        <aside className="side-stack">
+          <section className="surface">
+            <div className="panel-header compact">
+              <div>
+                <span className="eyebrow">结构化结果</span>
+                <h3>需求列表</h3>
+              </div>
+              <span className="mini-pill">{requirementResult?.requirements.length ?? 0} 条</span>
+            </div>
+            {requirementResult?.requirements.length ? (
+              <div className="requirement-list">
+                {requirementResult.requirements.map((requirement) => (
+                  <article className="requirement-card" key={requirement.requirement_id}>
+                    <strong>{requirement.requirement_id}</strong>
+                    <p>{requirement.statement}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="muted-text">上传 PDF 并开始拆分后，这里会显示结构化需求。</p>
+            )}
+          </section>
+        </aside>
+      </section>
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -778,6 +887,7 @@ function App() {
 
         {activeView === "chat" ? renderChatView() : null}
         {activeView === "report" ? renderReportView() : null}
+        {activeView === "requirements" ? renderRequirementsView() : null}
         {activeView === "database" ? renderDatabaseView() : null}
       </main>
 

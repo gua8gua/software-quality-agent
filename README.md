@@ -1,6 +1,6 @@
 # Software Quality Agent
 
-面向“通用软件质量管理系统开发”的多 Agent 后端原型，当前重点支持生命周期文档和代码资产的管理、质量问答、项目报告生成、数据库读写。
+面向“通用软件质量管理系统开发”的多 Agent 后端原型，当前重点支持生命周期文档和代码资产的管理、质量问答、项目报告生成、数据库读写，以及大型项目 PDF 的分块式需求抽取。
 
 ## 参考基线
 
@@ -15,7 +15,7 @@
 - FastAPI
 - SQLAlchemy Async ORM
 - SQLite + aiosqlite，后续可切 PostgreSQL
-- OpenAI-compatible chat API，可用本地或私有模型服务；未配置时使用 mock LLM
+- OpenAI-compatible chat API，可用 OpenAI、DeepSeek、本地或私有模型服务；必须配置 LLM，不再提供 mock 模式
 
 ## 多 Agent 划分
 
@@ -26,6 +26,7 @@
 - `DatabaseReadAgent`：受控读取项目库、资产库、追踪关系、报告和审计事件。
 - `DatabaseWriteAgent`：受控写入项目、资产、trace link、对话、报告和审计事件。
 - `VerifierAgent`：校验报告结构、风险提示和证据完整性。
+- `RequirementDecompositionAgent`：本地按段落分批，调用 LLM 识别需求，再由后端去重、编号并执行 Pydantic 校验。
 
 ## 接口
 
@@ -53,6 +54,17 @@ python -m uvicorn software_quality_agent.server:app --host 127.0.0.1 --port 8010
 ```
 
 默认数据库：`data/software_quality_agent.sqlite`。首次启动会写入一个演示项目，用于前端联调。
+
+启动前必须在 `.env` 中配置真实的 OpenAI-compatible LLM：
+
+```env
+LLM_PROVIDER=openai_compatible
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=your-api-key
+LLM_MODEL=gpt-4o-mini
+```
+
+未配置完整时，服务启动会直接报错，不会使用规则或 mock 结果替代 LLM。
 
 ## 环境变量
 
