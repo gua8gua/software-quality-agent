@@ -1,0 +1,11 @@
+.qm-consistency-form fieldset > label { display: grid; gap: 8px; margin-bottom: 18px; }
+.qm-consistency-modes { margin: 18px 0; }
+.qm-consistency-form .qm-consistency-modes label { display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 14px; border: 1px solid #dce3ec; border-radius: 7px; }
+.qm-consistency-form input[type=radio] { width: 16px; height: 16px; padding: 0; margin: 0; flex: 0 0 auto; accent-color: #245cce; }
+.qm-consistency-report { padding: 24px; overflow-wrap: anywhere; }
+.qm-consistency-report > label { display: grid; gap: 8px; margin: 18px 0; }
+.qm-consistency-report article { border: 1px solid #e5ebf3; border-radius: 8px; margin: 16px 0; }
+.qm-consistency-report blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid #8aabe8; background: #f5f8fd; }
+.qm-consistency-report details { margin: 10px 0; }
+.qm-consistency-report summary { cursor: pointer; }
+.qm-consistency-report pre { margin-top: 10px; padding: 12px; background: #f5f8fd; }

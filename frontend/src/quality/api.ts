@@ -22,7 +22,7 @@ export type ModelCapability = "chat" | "embedding" | "rerank" | "vision" | "imag
 export interface ModelItem { id: string; owned_by: string; capabilities: ModelCapability[]; capability_source: "provider" | "ollama" | "probe" | "manual" | "unknown"; format: string | null; family: string | null; parameter_size: string | null; quantization_level: string | null; embedding_dimension: number | null; verification: Record<string, string> }
 export interface ModelProvider { id: "deepseek" | "local_openai" | "custom"; label: string; description: string; default_base_url: string | null; base_url_editable: boolean; api_key_required: boolean; is_local: boolean; capabilities: Array<"embedding" | "chat"> }
 export interface ModelConnection { id: string; name: string; provider: string; provider_label: string; capabilities: Array<"embedding" | "chat">; base_url: string; is_local: boolean; api_key_configured: boolean; models: ModelItem[]; status: string; status_message: string; last_checked_at: string | null }
-export interface ModelTask { id: "tlr_embedding" | "tlr_classification" | "architecture_extraction"; label: string; description: string; capability: "embedding" | "chat" }
+export interface ModelTask { id: "tlr_embedding" | "tlr_classification" | "architecture_extraction" | "requirements_analysis" | "consistency_judgement"; label: string; description: string; capability: "embedding" | "chat" }
 export interface ModelBinding { task: ModelTask["id"]; connection_id: string | null; model_id: string | null; dimension: number | null; test_status: string; test_message: string; last_tested_at: string | null; fallback?: { source: string; base_url: string; model_id: string; api_key_configured: boolean } }
 export interface ModelConfig { providers: ModelProvider[]; connections: ModelConnection[]; tasks: ModelTask[]; bindings: ModelBinding[] }
 export interface Evidence {
@@ -33,6 +33,10 @@ export interface Evidence {
 
 const base = (import.meta.env.VITE_QUALITY_API_BASE || "/api/v1/tlr").replace(/\/$/, "");
 const apiRoot = base.replace(/\/tlr$/, "");
+export function analysisRequest<T>(module: "consistency" | "requirements", path: string, tenant: string, project: string, body?: unknown, query?: Record<string, string>) {
+  const params = new URLSearchParams({ tenant_id: tenant, project_id: project, ...query });
+  return request<T>(`${apiRoot}/${module}${path}?${params}`, body === undefined ? {} : { method: "POST", body: JSON.stringify(body) });
+}
 export function url(path: string, tenant: string, project?: string) {
   const query = new URLSearchParams({ tenant_id: tenant });
   if (project) query.set("project_id", project);

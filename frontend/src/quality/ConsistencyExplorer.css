@@ -1,0 +1,15 @@
+.qm-consistency-explorer > .qm-tabs { margin: 20px 0; gap: 12px; }
+.qm-consistency-explorer > .qm-tabs a { padding: 12px 20px; border-bottom: 3px solid transparent; }
+.qm-consistency-explorer > .qm-tabs a.active { border-color: #2563eb; color: #1d4ed8; font-weight: 700; }
+.qm-unit-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.qm-unit-title { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.qm-unit-list td { vertical-align: top; white-space: normal; }
+.qm-unit-list th:first-child { width: 45%; }
+.qm-unit-heading { overflow-wrap: anywhere; white-space: pre-wrap; }
+.qm-unit-body { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 480px; overflow: auto; line-height: 1.7; padding: 16px; background: #f5f7fb; border-radius: 8px; }
+.qm-unit-meta { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; }
+.qm-unit-meta dd { margin: 0; overflow-wrap: anywhere; }
+.qm-unit-meta dd a { display: inline-block; margin-right: 12px; }
+.qm-consistency-explorer > .qm-panel { margin-bottom: 20px; }
+.qm-consistency-explorer td { vertical-align: top; overflow-wrap: anywhere; }
+@media (max-width: 1100px) { .qm-unit-columns { grid-template-columns: minmax(0, 1fr); } }
