@@ -2,7 +2,7 @@
 
 ## 项目资料库前端
 
-`frontend/` 当前正式入口包含“项目资料库”和“模型配置”。项目入口支持本地上传、显式选择业务类型、新快照、重新检测和证据可视化；模型入口展示本地/远程 OpenAI 兼容模型，保存 API 密钥并为 TLR 任务选择模型。启动、存储、可视化基线与端到端测试见 [frontend/README.md](frontend/README.md)。
+`frontend/` 使用 jaleef 的主界面，“项目资料库”子板块包含 gua8gua 的完整工作台和模型配置。项目入口支持本地上传、显式选择业务类型、新快照、重新检测和证据可视化；模型入口展示本地/远程 OpenAI 兼容模型，保存 API 密钥并为 TLR 任务选择模型。启动、存储、可视化基线与端到端测试见 [frontend/README.md](frontend/README.md)。
 
 ## 部署与启动
 进入 `frontend` 子目录：
@@ -39,7 +39,7 @@ git pull --ff-only origin develop
 git branch -d feature/yourname-topic
 ```
 
-面向“通用软件质量管理系统开发”的多 Agent 后端原型，当前重点支持生命周期文档和代码资产的管理、质量问答、项目报告生成、数据库读写。
+面向“通用软件质量管理系统开发”的多 Agent 后端原型，当前重点支持生命周期文档和代码资产的管理、质量问答、项目报告生成、数据库读写，以及大型项目 PDF 的分块式需求抽取。
 
 ## 参考基线
 
@@ -54,7 +54,7 @@ git branch -d feature/yourname-topic
 - FastAPI
 - SQLAlchemy Async ORM
 - SQLite + aiosqlite，后续可切 PostgreSQL
-- OpenAI-compatible chat API，可用本地或私有模型服务；未配置时使用 mock LLM
+- OpenAI-compatible chat API，可用 OpenAI、DeepSeek、本地或私有模型服务；必须配置 LLM，不再提供 mock 模式
 
 ## 多 Agent 划分
 
@@ -65,6 +65,7 @@ git branch -d feature/yourname-topic
 - `DatabaseReadAgent`：受控读取项目库、资产库、追踪关系、报告和审计事件。
 - `DatabaseWriteAgent`：受控写入项目、资产、trace link、对话、报告和审计事件。
 - `VerifierAgent`：校验报告结构、风险提示和证据完整性。
+- `RequirementDecompositionAgent`：本地按段落分批调用 LLM 识别候选需求，再按业务能力合并过细条目，最后由后端去重、编号并执行 Pydantic 校验。
 
 ## 接口
 
@@ -126,3 +127,40 @@ software-quality-agent/
 ├─ docs/                                  # 多 Agent 设计、参考记录、存储能力检查
 └─ scripts/                               # 知识库下载/校验与前端参考资料抓取
 ```
+
+## Agent 启动与模型配置
+
+```powershell
+python -m pip install -e .
+software-quality-agent serve --host 127.0.0.1 --port 8010
+```
+
+或者：
+
+```powershell
+python -m uvicorn software_quality_agent.server:app --host 127.0.0.1 --port 8010 --reload
+```
+
+默认数据库：`data/software_quality_agent.sqlite`。首次启动会写入一个演示项目，用于前端联调。
+
+启动前必须在 `.env` 中配置真实的 OpenAI-compatible LLM：
+
+```env
+LLM_PROVIDER=openai_compatible
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=your-api-key
+LLM_MODEL=gpt-4o-mini
+```
+
+未配置完整时，服务启动会直接报错，不会使用规则或 mock 结果替代 LLM。
+
+## 环境变量
+
+复制 `.env.example` 为 `.env` 后可配置：
+
+- `DATABASE_URL`
+- `LLM_PROVIDER`
+- `LLM_BASE_URL`
+- `LLM_API_KEY`
+- `LLM_MODEL`
+- `API_CORS_ORIGINS`

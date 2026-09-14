@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+from io import BytesIO
+
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
+
 from .agents import (
     ConversationAgent,
     DatabaseReadAgent,
     DatabaseWriteAgent,
     EvidenceAgent,
     LLMClient,
-    MockLLMClient,
     OpenAICompatibleLLMClient,
     OrchestratorAgent,
     ReportAgent,
+    RequirementDecompositionAgent,
     VerifierAgent,
 )
 from .config import Settings
@@ -23,6 +28,7 @@ from .schemas import (
     ProjectSummary,
     ReportRequest,
     ReportResponse,
+    RequirementExtractionResponse,
     SchemaResponse,
 )
 from .store import QualityStore, ReportRun
@@ -40,17 +46,24 @@ class QualityAgentService:
             write_agent=DatabaseWriteAgent(self.store),
             evidence_agent=EvidenceAgent(self.store),
             verifier_agent=VerifierAgent(),
+            requirement_agent=RequirementDecompositionAgent(self.llm),
         )
 
     def _build_llm(self) -> LLMClient:
-        if self.settings.llm_provider == "openai_compatible" and self.settings.llm_api_key:
-            return OpenAICompatibleLLMClient(
-                base_url=self.settings.llm_base_url,
-                api_key=self.settings.llm_api_key,
-                model=self.settings.llm_model,
-                timeout_seconds=self.settings.llm_timeout_seconds,
-            )
-        return MockLLMClient()
+        if self.settings.llm_provider != "openai_compatible":
+            raise ValueError("LLM_PROVIDER 必须设置为 openai_compatible")
+        if not self.settings.llm_base_url:
+            raise ValueError("LLM_BASE_URL 未配置")
+        if not self.settings.llm_api_key:
+            raise ValueError("LLM_API_KEY 未配置")
+        if not self.settings.llm_model:
+            raise ValueError("LLM_MODEL 未配置")
+        return OpenAICompatibleLLMClient(
+            base_url=self.settings.llm_base_url,
+            api_key=self.settings.llm_api_key,
+            model=self.settings.llm_model,
+            timeout_seconds=self.settings.llm_timeout_seconds,
+        )
 
     async def list_projects(self) -> list[ProjectSummary]:
         projects = await self.store.list_projects()
@@ -97,6 +110,22 @@ class QualityAgentService:
     async def reports(self, project_id: str) -> list[dict[str, object]]:
         reports = await self.store.list_reports(project_id)
         return [self.store.report_row(item) for item in reports]
+
+    async def extract_requirements(
+        self, *, filename: str, content: bytes
+    ) -> RequirementExtractionResponse:
+        if not content:
+            raise ValueError("上传的 PDF 为空")
+        try:
+            reader = PdfReader(BytesIO(content))
+        except (PdfReadError, OSError) as exc:
+            raise ValueError("无法读取 PDF 文件") from exc
+        page_text = [(page.extract_text() or "").strip() for page in reader.pages]
+        return await self.orchestrator.handle_requirement_extraction(
+            source_filename=filename,
+            page_count=len(reader.pages),
+            page_text=page_text,
+        )
 
     async def _require_project(self, project_id: str):
         project = await self.store.get_project(project_id)

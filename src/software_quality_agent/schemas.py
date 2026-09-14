@@ -34,6 +34,7 @@ class TraceLinkSummary(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    # 创建一个 Pydantic 模型类 ChatRequest时, 自动去掉所有变量字符串首尾空格
     model_config = ConfigDict(str_strip_whitespace=True)
 
     project_id: str
@@ -71,6 +72,25 @@ class ReportResponse(BaseModel):
     report_id: str
 
 
+class RequirementPoint(BaseModel):
+    """One independently actionable requirement."""
+
+    requirement_id: str = Field(pattern=r"^REQ-\d{3,}$")
+    statement: str = Field(min_length=1)
+
+
+class RequirementCandidate(BaseModel):
+    statement: str = Field(min_length=1)
+
+
+class RequirementExtractionResponse(BaseModel):
+    source_filename: str
+    page_count: int = Field(ge=0)
+    project_summary: str
+    requirements: list[RequirementPoint]
+    warnings: list[str] = Field(default_factory=list)
+
+
 class DatabaseReadRequest(BaseModel):
     scope: Literal["projects", "artifacts", "trace_links", "reports", "audit_events"]
     project_id: str | None = None
@@ -104,4 +124,3 @@ class DatabaseWriteResponse(BaseModel):
 
 class SchemaResponse(BaseModel):
     tables: dict[str, list[str]]
-

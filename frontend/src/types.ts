@@ -1,4 +1,4 @@
-export type ViewId = "chat" | "report" | "database";
+export type ViewId = "chat" | "report" | "requirements" | "database" | "quality";
 
 export type ReportType = "quality_overview" | "traceability" | "coverage" | "custom";
 
@@ -70,4 +70,17 @@ export interface DatabaseWriteResponse {
   operation: string;
   record_id: string;
   message: string;
+}
+
+export interface RequirementPoint {
+  requirement_id: string;
+  statement: string;
+}
+
+export interface RequirementExtractionResponse {
+  source_filename: string;
+  page_count: number;
+  project_summary: string;
+  requirements: RequirementPoint[];
+  warnings: string[];
 }

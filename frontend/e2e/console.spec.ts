@@ -72,7 +72,7 @@ test('layer matrix defaults, cross-layer selection and original structure naviga
     {external_id:'REF',kind:'code',content:'missing.java',structure:{content_status:'reference_only',title:'Missing source',parent_ids:['D']}},
   ].map(a=>({...a,revision:'v1'}))};
   const response=await request.post('http://127.0.0.1:18080/api/v1/tlr/datasets',{data:payload});expect(response.ok()).toBeTruthy();
-  await page.goto('/#/projects/'+project);
+  await page.goto('/quality.html#/projects/'+project);
   await page.getByRole('tab',{name:'结构关系',exact:true}).click();
   await page.getByRole('button',{name:'展开 Background',exact:true}).click();
   await page.getByRole('link',{name:'Requirement',exact:true}).click();

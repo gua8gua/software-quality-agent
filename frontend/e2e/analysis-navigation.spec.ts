@@ -55,7 +55,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("batch list opens only its own child tasks and preserves back navigation", async ({ page }) => {
-  await page.goto("/#/projects/p/tlr");
+  await page.goto("/quality.html#/projects/p/tlr");
   await expect(page.getByRole("heading", { name: "TLR 批次记录 · 2 个批次" })).toBeVisible();
   await expect(page.getByRole("link", { name: "查看子任务", exact: true })).toHaveCount(2);
   await expect(page.getByRole("link", { name: "查看子任务结果", exact: true })).toHaveCount(0);
@@ -74,7 +74,7 @@ test("batch list opens only its own child tasks and preserves back navigation", 
 
 test("original artifacts, intermediate units, groups and reverse implementation navigation", async ({ page }) => {
   const errors: string[] = []; page.on("pageerror", e => errors.push(e.message));
-  await page.goto("/#/projects/p/analyses");
+  await page.goto("/quality.html#/projects/p/analyses");
   await page.getByRole("link", { name: "查看分析", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "一致性分析详情", exact: true })).toBeVisible();

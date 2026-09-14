@@ -1,6 +1,10 @@
 # 软件项目资料库
 
-正式入口包含项目资料库和模型配置。项目路径为：所有项目 → 单个项目（资料快照 / TLR 记录）→ 单份资料或检测结果。连接软件质量管理后端，接口失败展示错误，不回退示例数据。工作空间对应后端 tenant_id。
+正式入口使用 jaleef 的对话、报告生成、需求拆分和数据库读写主界面。“项目资料库”子板块嵌入 gua8gua 的完整工作台，保留项目资料库和模型配置。项目路径为：所有项目 → 单个项目（资料快照 / TLR 记录）→ 单份资料或检测结果。连接软件质量管理后端，接口失败展示错误，不回退示例数据。工作空间对应后端 tenant_id。
+
+合并后的开发启动：先运行质量后端 `app.main:app`（8000），再在 Agent 根目录运行 `software-quality-agent serve --port 8010`，最后在本目录运行 `npm run dev`（5173）。Vite 将 `/api/v1` 转发到 `QUALITY_BACKEND_URL`（默认 8000），其余 `/api` 转发到 `AGENT_BACKEND_URL`（默认 8010）。Agent 保留 jaleef 的真实 LLM 配置要求。
+
+生产启动：`npm run build` 生成 `index.html` 和 `quality.html`，Agent 8010 同时提供主界面和工作台，并将 `/api/v1` 转发到独立质量后端。Agent 的 `.env` 使用 `QUALITY_BACKEND_URL` 配置该地址。原工作台也可通过 `/quality.html#/projects` 独立访问；模型配置入口为 `/quality.html#/models`。两页隔离样式和内部导航。
 
 ## 项目一致性分析
 

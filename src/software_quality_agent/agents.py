@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
+import json
+import re
 from typing import Any
 from uuid import uuid4
 
@@ -16,18 +19,27 @@ from .schemas import (
     DatabaseWriteResponse,
     ReportRequest,
     ReportResponse,
+    RequirementCandidate,
+    RequirementExtractionResponse,
+    RequirementPoint,
 )
 from .store import Artifact, Project, QualityStore, ReportRun, TraceLink
 
 
 class LLMClient:
-    async def chat(self, *, system_prompt: str, user_prompt: str) -> str:  # pragma: no cover
+    async def chat(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        response_format: dict[str, Any] | None = None,
+        max_tokens: int | None = None,
+    ) -> str:  # pragma: no cover
         raise NotImplementedError
 
 
-class MockLLMClient(LLMClient):
-    async def chat(self, *, system_prompt: str, user_prompt: str) -> str:
-        return ""
+class LLMResponseTruncated(ValueError):
+    pass
 
 
 class OpenAICompatibleLLMClient(LLMClient):
@@ -37,7 +49,14 @@ class OpenAICompatibleLLMClient(LLMClient):
         self.model = model
         self.timeout_seconds = timeout_seconds
 
-    async def chat(self, *, system_prompt: str, user_prompt: str) -> str:
+    async def chat(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        response_format: dict[str, Any] | None = None,
+        max_tokens: int | None = None,
+    ) -> str:
         payload = {
             "model": self.model,
             "messages": [
@@ -45,14 +64,42 @@ class OpenAICompatibleLLMClient(LLMClient):
                 {"role": "user", "content": user_prompt},
             ],
         }
+        if response_format:
+            payload["response_format"] = response_format
+        if max_tokens:
+            payload["max_tokens"] = max_tokens
         headers = {"Content-Type": "application/json"}
         if self.api_key:
+            headers["Authorization"] = "Bearer " + self.api_key
             headers["Authorization"] = f"Bearer {self.api_key}"
+        if self.api_key:
+            headers.update({"Authorization": "Bearer " + self.api_key})
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.api_key}"}
+        headers["Authorization"] = f"Bearer {self.api_key}"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + self.api_key,
+        }
         async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
             response = await client.post(f"{self.base_url}/chat/completions", json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
-        return data["choices"][0]["message"]["content"]
+        choices = data.get("choices") or []
+        if not choices:
+            raise ValueError("LLM 响应缺少 choices 字段")
+        choice = choices[0]
+        message = choice.get("message") or {}
+        content = message.get("content")
+        if isinstance(content, str) and content.strip():
+            return content
+        finish_reason = choice.get("finish_reason", "unknown")
+        refusal = message.get("refusal")
+        detail = f"finish_reason={finish_reason}"
+        if refusal:
+            detail += f", refusal={refusal}"
+        if finish_reason == "length":
+            raise LLMResponseTruncated(f"LLM 返回空内容（{detail}）")
+        raise ValueError(f"LLM 返回空内容（{detail}）")
 
 
 @dataclass(slots=True)
@@ -258,6 +305,169 @@ class ReportAgent:
         return mapping[report_type]
 
 
+class RequirementDecompositionAgent:
+    """Extracts and consolidates requirements into code-sized business capabilities."""
+
+    batch_char_limit = 6000
+    max_concurrency = 4
+    consolidation_char_limit = 16000
+
+    def __init__(self, llm: LLMClient) -> None:
+        self.llm = llm
+        self._semaphore = asyncio.Semaphore(self.max_concurrency)
+
+    async def decompose(
+        self,
+        *,
+        source_filename: str,
+        page_count: int,
+        page_text: list[str],
+    ) -> RequirementExtractionResponse:
+        batches = self._build_paragraph_batches(page_text)
+        if not batches:
+            raise ValueError("PDF 未提取到可分析的文本，可能是扫描件，请先进行 OCR")
+
+        # await asyncio 表示把多个异步任务一起执行
+        batch_results = await asyncio.gather(
+            *(self._extract_batch(index, batch) for index, batch in enumerate(batches, start=1))
+        )
+        
+        statements = self._deduplicate(
+            statement
+            for result in batch_results
+            for statement in result
+        )
+        statements = await self._consolidate(statements)
+        requirements = [
+            RequirementPoint(
+                requirement_id=f"REQ-{index:03d}",
+                statement=statement,
+            )
+            for index, statement in enumerate(statements, start=1)
+        ]
+        return RequirementExtractionResponse(
+            source_filename=source_filename,
+            page_count=page_count,
+            project_summary="已通过本地段落分批和 LLM 需求识别完成项目需求提取。",
+            requirements=requirements,
+            warnings=[],
+        )
+
+    def _build_paragraph_batches(self, page_text: list[str]) -> list[str]:
+        paragraphs: list[str] = []
+        for page_number, text in enumerate(page_text, start=1):
+            for paragraph in re.split(r"\n\s*\n+|\n(?=\s*(?:[-*•]|\d+[.)、]))", text):
+                cleaned = " ".join(paragraph.split())
+                if len(cleaned) >= 8:
+                    paragraphs.append(f"[第 {page_number} 页] {cleaned}")
+
+        batches: list[str] = []
+        current: list[str] = []
+        current_length = 0
+        for paragraph in paragraphs:
+            if current and current_length + len(paragraph) + 1 > self.batch_char_limit:
+                batches.append("\n".join(current))
+                current = []
+                current_length = 0
+            current.append(paragraph)
+            current_length += len(paragraph) + 1
+        if current:
+            batches.append("\n".join(current))
+        return batches
+
+    async def _extract_batch(self, index: int, batch: str) -> list[str]:
+        async with self._semaphore:
+            answer = await self.llm.chat(
+                system_prompt=(
+                    "你是软件需求分析师。只提取明确、可实现的业务能力。"
+                    "一条需求应对应一个完整功能、接口或业务流程，而不是一个字段、"
+                    "一个按钮、一个校验规则或一个异常分支。"
+                    "同一功能的输入、处理、输出、权限和异常处理必须合并为一条需求。"
+                    "忽略背景、愿景、价值描述、技术建议和重复内容。"
+                    "每条需求用一句完整的话描述，必须返回合法 JSON，不要 Markdown。"
+                ),
+                user_prompt=(
+                    f"这是第 {index} 批项目文档段落。\n"
+                    '返回格式：{"requirements":[{"statement":"系统应..."}]}\n'
+                    "如果没有明确需求，返回 {\"requirements\":[]}。\n\n"
+                    f"文档段落：\n{batch}"
+                ),
+                response_format={"type": "json_object"},
+                max_tokens=2500,
+            )
+        data = self._load_json(answer, stage=f"Requirement batch {index}")
+        results: list[str] = []
+        for item in data.get("requirements", []):
+            candidate = RequirementCandidate.model_validate(item)
+            results.append(candidate.statement)
+        return results
+
+    async def _consolidate(self, statements: list[str]) -> list[str]:
+        """Merge fine-grained candidates into independently implementable capabilities."""
+        if len(statements) < 2:
+            return statements
+
+        numbered = "\n".join(
+            f"{index}. {statement}" for index, statement in enumerate(statements, start=1)
+        )
+        if len(numbered) > self.consolidation_char_limit:
+            raise ValueError(
+                "需求候选过多，无法在一次语义合并中处理；请缩小 PDF 批次后重试"
+            )
+
+        answer = await self.llm.chat(
+            system_prompt=(
+                "你是需求架构师，负责把候选需求整理成适合代码覆盖分析的需求单元。"
+                "请合并属于同一个业务能力、接口、服务或完整流程的细小需求。"
+                "例如“输入账号”“校验密码”“生成登录令牌”“登录失败提示”"
+                "应合并为一条“用户登录功能”，因为它们通常由同一组代码共同实现。"
+                "只有在两个需求可以由不同模块独立开发、独立测试时才保留为两条。"
+                "不要把一个完整功能拆成输入、处理、输出和异常四条。"
+                "不要合并两个无关业务能力，不要凭空添加文档中没有的能力。"
+                "每条结果应是一句完整的业务需求，保留必要的范围和约束。"
+                "必须返回合法 JSON，不要 Markdown。"
+            ),
+            user_prompt=(
+                "请整理下面的候选需求。\n"
+                '返回格式：{"requirements":[{"statement":"系统应..."}]}\n'
+                "要求：合并过细的需求；删除重复需求；保留相互独立的功能；"
+                "输出结果应比输入更接近一个需求对应一组可实现代码。\n\n"
+                f"候选需求：\n{numbered}"
+            ),
+            response_format={"type": "json_object"},
+            max_tokens=3000,
+        )
+        data = self._load_json(answer, stage="Requirement consolidation")
+        consolidated: list[str] = []
+        for item in data.get("requirements", []):
+            candidate = RequirementCandidate.model_validate(item)
+            consolidated.append(candidate.statement)
+        if not consolidated:
+            raise ValueError("Requirement consolidation 阶段未返回任何需求")
+        return self._deduplicate(consolidated)
+
+    def _deduplicate(self, statements: Any) -> list[str]:
+        unique: list[str] = []
+        seen: set[str] = set()
+        for statement in statements:
+            normalized = re.sub(r"\s+", "", statement).strip("。.!！?？")
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                unique.append(statement.strip())
+        return unique
+
+    def _load_json(self, answer: str, *, stage: str) -> dict[str, Any]:
+        if not answer.strip():
+            raise ValueError(f"{stage} 阶段的 LLM 返回为空")
+        try:
+            data = json.loads(answer)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"{stage} 阶段的 LLM 返回不是合法 JSON") from exc
+        if not isinstance(data, dict):
+            raise ValueError(f"{stage} 阶段的 LLM 返回结果不是 JSON 对象")
+        return data
+
+
 class DatabaseReadAgent:
     def __init__(self, store: QualityStore) -> None:
         self.store = store
@@ -372,6 +582,7 @@ class OrchestratorAgent:
         write_agent: DatabaseWriteAgent,
         evidence_agent: EvidenceAgent,
         verifier_agent: VerifierAgent,
+        requirement_agent: RequirementDecompositionAgent,
     ) -> None:
         self.conversation_agent = conversation_agent
         self.report_agent = report_agent
@@ -379,6 +590,7 @@ class OrchestratorAgent:
         self.write_agent = write_agent
         self.evidence_agent = evidence_agent
         self.verifier_agent = verifier_agent
+        self.requirement_agent = requirement_agent
 
     async def handle_chat(self, request: ChatRequest, project: Project) -> ChatResponse:
         evidence = await self.evidence_agent.collect(project)
@@ -397,3 +609,16 @@ class OrchestratorAgent:
 
     async def handle_db_write(self, request: DatabaseWriteRequest) -> DatabaseWriteResponse:
         return await self.write_agent.write(request)
+
+    async def handle_requirement_extraction(
+        self,
+        *,
+        source_filename: str,
+        page_count: int,
+        page_text: list[str],
+    ) -> RequirementExtractionResponse:
+        return await self.requirement_agent.decompose(
+            source_filename=source_filename,
+            page_count=page_count,
+            page_text=page_text,
+        )
