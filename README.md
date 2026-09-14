@@ -26,7 +26,7 @@
 - `DatabaseReadAgent`：受控读取项目库、资产库、追踪关系、报告和审计事件。
 - `DatabaseWriteAgent`：受控写入项目、资产、trace link、对话、报告和审计事件。
 - `VerifierAgent`：校验报告结构、风险提示和证据完整性。
-- `RequirementDecompositionAgent`：本地按段落分批，调用 LLM 识别需求，再由后端去重、编号并执行 Pydantic 校验。
+- `RequirementDecompositionAgent`：本地按段落分批调用 LLM 识别候选需求，再按业务能力合并过细条目，最后由后端去重、编号并执行 Pydantic 校验。
 
 ## 接口
 
