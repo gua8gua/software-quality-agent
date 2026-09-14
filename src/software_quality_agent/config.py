@@ -18,10 +18,10 @@ class Settings(BaseSettings):
     app_env: str = "local"
     database_url: str = "sqlite+aiosqlite:///./data/software_quality_agent.sqlite"
 
-    llm_provider: str = "mock"
+    llm_provider: str = "openai_compatible"
     llm_base_url: str = ""
     llm_api_key: str = ""
-    llm_model: str = "gpt-4o-mini"
+    llm_model: str = ""
     llm_timeout_seconds: float = Field(default=60.0, gt=0)
 
     default_project_id: str = ""
@@ -35,4 +35,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

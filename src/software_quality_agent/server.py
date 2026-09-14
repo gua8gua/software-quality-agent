@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -77,6 +77,18 @@ def build_app() -> FastAPI:
         request: ReportRequest, service: QualityAgentService = Depends(get_service)
     ):
         return await service.generate_report(request)
+
+    @app.post("/api/requirements/extract")
+    async def extract_requirements(
+        file: UploadFile = File(...),
+        service: QualityAgentService = Depends(get_service),
+    ):
+        if file.content_type not in {"application/pdf", "application/octet-stream"}:
+            raise ValueError("只支持上传 PDF 文件")
+        return await service.extract_requirements(
+            filename=file.filename or "project.pdf",
+            content=await file.read(),
+        )
 
     @app.get("/api/reports")
     async def list_reports(project_id: str, service: QualityAgentService = Depends(get_service)):
