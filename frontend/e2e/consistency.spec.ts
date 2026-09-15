@@ -66,7 +66,7 @@ for (const mode of ["fresh", "fresh-partial", "existing", "existing-partial", "d
       if (path === "/api/v1/consistency/runs/analysis") return reply(report);
       throw new Error("Unexpected request: " + method + " " + path);
     });
-    await page.goto("/quality.html#/projects/p");
+    await page.goto("/#/projects/p");
     await page.getByRole("tab", { name: "一致性分析", exact: true }).click();
     await page.getByRole("button", { name: "新建一致性分析", exact: true }).click();
     if (mode.startsWith("existing")) {

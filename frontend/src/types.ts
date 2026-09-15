@@ -1,4 +1,4 @@
-export type ViewId = "chat" | "report" | "requirements" | "database" | "quality";
+export type ViewId = "chat" | "report" | "requirements" | "database" | "quality" | "models";
 
 export type ReportType = "quality_overview" | "traceability" | "coverage" | "custom";
 

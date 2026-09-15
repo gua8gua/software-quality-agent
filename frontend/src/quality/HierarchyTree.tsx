@@ -27,7 +27,7 @@ export function HierarchyTree({ nodes, label = "结构节点", empty = "未保�
     return { roots, children, count: shown.size };
   }, [nodes, search]);
   const current = Math.min(page, Math.max(0, Math.ceil(roots.length / 50) - 1));
-  return <><div className="qm-toolbar qm-structure-tools"><input aria-label={`搜索${label}`} placeholder="搜索节点名称或类型…" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} /><span>{count} 个节点</span></div>
+  return <><div className="inline-controls qm-structure-tools"><input aria-label={`搜索${label}`} placeholder="搜索节点名称或类型…" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }} /><span>{count} 个节点</span></div>
     {!roots.length ? <Empty title={search ? "没有匹配的节点" : empty} /> : <ul className="qm-structure-tree">{roots.slice(current * 50, (current + 1) * 50).map(n => <Branch key={n.id} node={n} children={children} trail={new Set()} searching={!!search} />)}</ul>}
     {roots.length > 50 && <Pager page={current} size={50} total={roots.length} set={setPage} />}
   </>;

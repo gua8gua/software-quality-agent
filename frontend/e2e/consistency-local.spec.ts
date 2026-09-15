@@ -9,7 +9,7 @@ for (const project of ["dronology-safa", "smos"]) {
       if (route.request().method() !== "GET") throw new Error("Read-only check attempted a mutation");
       return route.continue();
     });
-    await page.goto("/quality.html#/projects/" + project);
+    await page.goto("/#/projects/" + project);
     await page.getByRole("tab", { name: "一致性分析", exact: true }).click();
     await page.getByRole("button", { name: "新建一致性分析", exact: true }).click();
     await page.getByLabel("源文档层级", { exact: true }).selectOption("requirements");
@@ -41,11 +41,11 @@ test("local historical analysis and batch pages remain readable", async ({ page 
     if (route.request().method() !== "GET") throw new Error("Read-only check attempted a mutation");
     return route.continue();
   });
-  await page.goto("/quality.html#/projects/dronology-safa/tlr");
+  await page.goto("/#/projects/dronology-safa/tlr");
   await page.getByRole("link", { name: "查看子任务", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "批次子任务", exact: true })).toBeVisible();
   await page.screenshot({ path: "../artifacts/consistency-ui/local-batch.png", fullPage: true });
-  await page.goto("/quality.html#/projects/dronology-safa/analyses");
+  await page.goto("/#/projects/dronology-safa/analyses");
   const history = page.getByRole("link", { name: "查看分析", exact: true });
   await expect(history.first()).toBeVisible();
   await history.first().click();
@@ -62,7 +62,7 @@ test("local original hierarchy keeps code references and selects a single layer"
     if (route.request().method() !== "GET") throw new Error("Read-only check attempted a mutation");
     return route.continue();
   });
-  await page.goto("/quality.html#/projects/dronology-safa");
+  await page.goto("/#/projects/dronology-safa");
   await page.getByRole("tab", { name: "结构关系", exact: true }).click();
   await expect(page.locator("main")).toContainText("本层 25 份工件");
   await page.getByLabel("结构关系数据层级", { exact: true }).selectOption("implementation");

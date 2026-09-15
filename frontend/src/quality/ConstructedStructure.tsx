@@ -43,10 +43,10 @@ export function ConstructedStructure({ model, base }: { model: ConsistencyModel;
     }
     return [...nodes.values()];
   }, [model, role, kind, base]);
-  return <section className="qm-panel qm-inset"><div className="qm-toolbar">
+  return <section className="surface qm-inset"><div className="inline-controls">
     <label>展示层<select aria-label="构建结构展示层" value={role} onChange={e => setRole(e.target.value as Role)}><option value="source">上层（源工件）</option><option value="target">下层（目标工件）</option></select></label>
     <label>结构类型<select aria-label="构建结构类型" value={kind || ""} onChange={e => setSelected(e.target.value as StructureKind)}>{!available.length && <option value="">此层未保存结构</option>}{available.map(k => <option key={k} value={k}>{kinds[k]}</option>)}</select></label>
-  </div><p className="qm-muted">一次展示一层的一种结构。{kind === "project" ? "代码项目结构按已导入路径展示目录与文件；函数和类请切换到代码语法结构。" : kind === "groups" ? "分类与成员归属来自已保存的功能聚类，同一单元可属于多个分类。" : "节点与父子关系来自已保存的对应结构，点击单元可查看详情。"}</p>
+  </div><p className="muted-text">一次展示一层的一种结构。{kind === "project" ? "代码项目结构按已导入路径展示目录与文件；函数和类请切换到代码语法结构。" : kind === "groups" ? "分类与成员归属来自已保存的功能聚类，同一单元可属于多个分类。" : "节点与父子关系来自已保存的对应结构，点击单元可查看详情。"}</p>
     <HierarchyTree key={role + kind} nodes={nodes} label="构建结构节点" empty="此层未保存可展示的结构" />
   </section>;
 }

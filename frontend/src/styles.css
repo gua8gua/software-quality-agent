@@ -618,4 +618,21 @@ select:focus {
   }
 }
 
-.quality-workspace-frame { width: 100%; height: calc(100vh - 190px); min-height: 650px; border: 1px solid var(--line); border-radius: 8px; background: white; }
+[hidden] { display: none !important; }
+.quality-panel { min-width: 0; }
+.quality-context { margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.quality-content { display: grid; gap: 16px; }
+:where(.quality-panel) button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  color: var(--text);
+  padding: 10px 14px;
+}
+.quality-panel input[type="checkbox"], .quality-panel input[type="radio"] { width: auto; }
+.quality-panel .surface { min-width: 0; }
+.quality-panel .panel-header { flex-wrap: wrap; }

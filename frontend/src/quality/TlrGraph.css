@@ -1,24 +1,24 @@
-.qm-graph-tools > span em {
-  color: #a2adbc;
+:where(.quality-panel) .qm-graph-tools > span em {
+  color: var(--muted);
   font-style: normal;
   margin-left: 12px;
 }
 
-.qm-graph {
-  background-color: #fbfcff;
+:where(.quality-panel) .qm-graph {
+  background-color: var(--panel);
   background-image:
-    linear-gradient(90deg, #edf4ff80 0 34%, #fff 34% 66%, #edf8f480 66% 100%),
-    radial-gradient(#dce4f1 0.7px, transparent 0.7px);
+    linear-gradient(90deg, #edf4ff80 0 34%, var(--panel) 34% 66%, #edf8f480 66% 100%),
+    radial-gradient(var(--panel-soft) 0.7px, transparent 0.7px);
   background-size: 100% 100%, 18px 18px;
   height: 520px;
 }
 
 @media (max-width: 800px) {
-  .qm-graph {
+  :where(.quality-panel) .qm-graph {
     height: 430px;
   }
 
-  .qm-graph-tools > span em {
+  :where(.quality-panel) .qm-graph-tools > span em {
     display: none;
   }
 }

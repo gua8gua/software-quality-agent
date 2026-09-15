@@ -31,9 +31,10 @@ class MergeIntegration(unittest.TestCase):
         get_settings.cache_clear()
         self.directory.cleanup()
 
-    def test_original_api_and_both_built_pages(self):
-        for path in ["/api/health", "/api/projects", "/api/database/schema", "/", "/quality.html"]:
+    def test_original_api_and_shared_page(self):
+        for path in ["/api/health", "/api/projects", "/api/database/schema", "/"]:
             self.assertEqual(self.client.get(path).status_code, 200, path)
+        self.assertEqual(self.client.get("/quality.html").status_code, 404)
         schema = self.client.get("/openapi.json").json()["paths"]
         for path in ["/api/chat", "/api/reports/generate", "/api/database/write", "/api/requirements/extract"]:
             self.assertIn(path, schema)

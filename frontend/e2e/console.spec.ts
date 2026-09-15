@@ -4,7 +4,7 @@ import { mkdir } from 'node:fs/promises';
 test('project inventory, original download, TLR and evidence drill-down', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   const id = `browser-${Date.now()}`;
-  await page.goto('/');
+  await page.goto('/#/projects');
   await expect(page.getByRole('heading', { name: '所有项目' })).toBeVisible();
   await page.getByRole('button', { name: '新建项目', exact: true }).first().click();
   await page.getByLabel('项目名称').fill('端到端测试项目（测试模型）');
@@ -29,7 +29,7 @@ test('project inventory, original download, TLR and evidence drill-down', async 
   await page.getByRole('button', { name: '手工选择源与目标制品', exact: true }).click();
   await page.getByRole('button', { name: '需求 → 代码', exact: true }).click();
   await page.getByRole('button', { name: '开始检测', exact: true }).click();
-  await expect(page.locator('h1 .qm-badge')).toHaveText('已完成', { timeout: 30000 });
+  await expect(page.locator('h1 .mini-pill')).toHaveText('已完成', { timeout: 30000 });
   await expect(page.locator('.qm-graph canvas').first()).toBeVisible();
   await mkdir('../artifacts/console-qa', { recursive: true });
   await page.screenshot({ path: '../artifacts/console-qa/tlr-desktop.png', fullPage: true });
@@ -55,7 +55,7 @@ test('project inventory, original download, TLR and evidence drill-down', async 
 
 test('backend failure is visible without placeholder projects', async ({ page }) => {
   await page.route('**/api/v1/tlr/projects?*', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ msg: '数据库不可用' }) }));
-  await page.goto('/');
+  await page.goto('/#/projects');
   await expect(page.getByRole('alert')).toContainText('数据库不可用');
   await expect(page.locator('.qm-project-card')).toHaveCount(0);
 });
@@ -72,7 +72,7 @@ test('layer matrix defaults, cross-layer selection and original structure naviga
     {external_id:'REF',kind:'code',content:'missing.java',structure:{content_status:'reference_only',title:'Missing source',parent_ids:['D']}},
   ].map(a=>({...a,revision:'v1'}))};
   const response=await request.post('http://127.0.0.1:18080/api/v1/tlr/datasets',{data:payload});expect(response.ok()).toBeTruthy();
-  await page.goto('/quality.html#/projects/'+project);
+  await page.goto('/#/projects/'+project);
   await page.getByRole('tab',{name:'结构关系',exact:true}).click();
   await page.getByRole('button',{name:'展开 Background',exact:true}).click();
   await page.getByRole('link',{name:'Requirement',exact:true}).click();
@@ -88,6 +88,6 @@ test('layer matrix defaults, cross-layer selection and original structure naviga
   await page.screenshot({path:'../artifacts/console-qa/layer-selection.png',fullPage:true});
   await page.getByRole('button',{name:'创建并依次检测',exact:true}).click();
   await expect(page.getByRole('heading',{name:'层间运行矩阵',exact:true})).toBeVisible();
-  await expect(page.locator('section.qm-inset .qm-badge.completed')).toHaveCount(5,{timeout:30000});
+  await expect(page.locator('section.qm-inset .mini-pill.completed')).toHaveCount(5,{timeout:30000});
   await page.screenshot({path:'../artifacts/console-qa/layer-results.png',fullPage:true});
 });

@@ -1,3 +1,5 @@
+import ProjectsPanel from "./quality/ProjectsPanel";
+import { navigate, useHashRoute } from "./navigation";
 import {
   Database,
   FileText,
@@ -9,7 +11,7 @@ import {
   Sparkles,
   Table2,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   generateReport,
   listChatHistory,
@@ -36,6 +38,7 @@ import type {
 } from "./types";
 
 const views: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
+  { id: "models", label: "模型配置", icon: <Sparkles size={18} /> },
   { id: "quality", label: "项目资料库", icon: <Database size={18} /> },
   { id: "chat", label: "对话", icon: <MessageSquareText size={18} /> },
   { id: "report", label: "报告生成", icon: <FileText size={18} /> },
@@ -125,7 +128,23 @@ function defaultWritePayload(operation: WriteOperation, projectId: string): stri
 }
 
 function App() {
-  const [activeView, setActiveView] = useState<ViewId>(() => /^#\/?(projects|models)(\/|$)/.test(window.location.hash) ? "quality" : "chat");
+  const route = useHashRoute();
+  const activeView: ViewId = route[0] === "projects" ? "quality" : route[0] === "models" ? "models"
+    : ["report", "requirements", "database"].includes(route[0]) ? route[0] as ViewId : "chat";
+  const qualityVisible = activeView === "quality" || activeView === "models";
+  const lastProjectPath = useRef("/projects");
+  const lastQualityRoute = useRef<string[]>(["projects"]);
+  if (qualityVisible) lastQualityRoute.current = route;
+  if (route[0] === "projects") lastProjectPath.current = "/" + route.map(encodeURIComponent).join("/");
+  const [tenant, setTenant] = useState(import.meta.env.VITE_TENANT_ID || "local");
+  const [tenantDraft, setTenantDraft] = useState(tenant);
+  const [qualityVisited, setQualityVisited] = useState(qualityVisible);
+  useEffect(() => { if (qualityVisible) setQualityVisited(true); }, [qualityVisible]);
+  useEffect(() => { window.scrollTo(0, 0); }, [route.join("/")]);
+  function openView(view: ViewId) {
+    navigate(view === "quality" ? lastProjectPath.current : `/${view}`);
+  }
+
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [schema, setSchema] = useState<DatabaseSchema | null>(null);
@@ -825,7 +844,8 @@ function App() {
             <button
               key={view.id}
               className={`nav-item ${activeView === view.id ? "active" : ""}`}
-              onClick={() => setActiveView(view.id)}
+              aria-current={activeView === view.id ? "page" : undefined}
+              onClick={() => openView(view.id)}
               type="button"
             >
               {view.icon}
@@ -834,7 +854,7 @@ function App() {
           ))}
         </nav>
 
-        <section className="surface sidebar-block">
+        <section className="surface sidebar-block" hidden={qualityVisible}>
           <span className="eyebrow">项目</span>
           <div className="project-list">
             {projects.map((project) => (
@@ -853,7 +873,7 @@ function App() {
           </div>
         </section>
 
-        <section className="surface sidebar-block">
+        <section className="surface sidebar-block" hidden={qualityVisible}>
           <div className="side-header">
             <ShieldCheck size={16} />
             <span>连接状态</span>
@@ -867,10 +887,10 @@ function App() {
         <header className="topbar">
           <div>
             <span className="eyebrow">Software Quality Agent</span>
-            <h2>{selectedProject?.name ?? "质量工作台"}</h2>
-            <p className="lead">{selectedProject?.description ?? "请选择一个项目开始分析"}</p>
+            <h2>{qualityVisible ? activeView === "models" ? "模型配置" : "项目资料库" : selectedProject?.name ?? "质量工作台"}</h2>
+            <p className="lead">{qualityVisible ? "软件资料、追踪检测与一致性分析" : selectedProject?.description ?? "请选择一个项目开始分析"}</p>
           </div>
-          <div className="status-strip">
+          <div className="status-strip" hidden={qualityVisible}>
             <span className="status-pill">
               <Sparkles size={14} />
               {selectedProject?.artifact_count ?? 0} 资产
@@ -886,8 +906,8 @@ function App() {
           </div>
         </header>
 
-        <section hidden={activeView !== "quality"} aria-label="项目资料库工作台">
-          <iframe className="quality-workspace-frame" title="项目资料库工作台" src={`./quality.html${window.location.hash || "#/projects"}`} />
+        <section className="quality-panel" hidden={!qualityVisible} aria-label="项目资料库工作台">
+          {(qualityVisited || qualityVisible) && <ProjectsPanel route={lastQualityRoute.current} tenant={tenant} tenantDraft={tenantDraft} onTenantDraft={setTenantDraft} onTenantChange={() => setTenant(tenantDraft.trim())} />}
         </section>
         {activeView === "chat" ? renderChatView() : null}
         {activeView === "report" ? renderReportView() : null}

@@ -23,7 +23,7 @@ test("project structure uses original layer endpoint and switches one layer at a
     }
     throw new Error("Unexpected request; legacy hierarchy must not be used: " + path);
   });
-  await page.goto("/quality.html#/projects/p");
+  await page.goto("/#/projects/p");
   await page.getByRole("tab", { name: "结构关系", exact: true }).click();
   await page.getByRole("button", { name: "展开 原始需求分组", exact: true }).click();
   await expect(page.getByRole("link", { name: "原始需求", exact: true })).toBeVisible();

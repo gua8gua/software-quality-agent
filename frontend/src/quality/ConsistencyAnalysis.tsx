@@ -1,3 +1,4 @@
+import { navigate } from "../navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { all, analysisRequest, date, errorText, get, post, runDisplayStatus, statusLabel, type Artifact, type Dataset, type Page, type Project, type Run } from "./api";
 import { Alert, Empty, Loading, Modal, Pager } from "./common";
@@ -41,19 +42,19 @@ export function ConsistencyPanel({ tenant, project, datasets, runs, refresh, cha
     return () => clearTimeout(timer);
   }, [history]);
   return <section className="qm-inset">
-    <div className="qm-toolbar"><div><h3>生命周期一致性分析</h3><p className="qm-muted">选择文档与代码，或选择不同生命周期文档，检查实现、集合覆盖与矛盾。</p></div>
-      <button className="qm-primary" disabled={!datasets.length} onClick={() => setOpen(true)}>新建一致性分析</button>
+    <div className="inline-controls"><div><h3>生命周期一致性分析</h3><p className="muted-text">选择文档与代码，或选择不同生命周期文档，检查实现、集合覆盖与矛盾。</p></div>
+      <button className="primary-button" disabled={!datasets.length} onClick={() => setOpen(true)}>新建一致性分析</button>
       <button onClick={() => setTick(v => v + 1)}>刷新记录</button></div>
     {error && <Alert>{error}</Alert>}
     {!history ? (!error && <Loading />) : !history.items.length ? <Empty title="还没有一致性分析记录"><p>可以复用所选类型的已完成追踪，也可以从项目文档和代码重新开始。</p></Empty> :
-      <><div className="qm-table-wrap"><table><thead><tr><th>分析 / 创建时间</th><th>资料快照 / 分析类型</th><th>辅助 TLR</th><th>状态</th><th /></tr></thead>
+      <><div className="table-wrap"><table className="data-table"><thead><tr><th>分析 / 创建时间</th><th>资料快照 / 分析类型</th><th>辅助 TLR</th><th>状态</th><th /></tr></thead>
         <tbody>{history.items.map(row => <tr key={row.id}><td><code>{row.id.slice(0, 8)}</code><small>{date(row.created_at)}</small></td>
           <td>{datasets.find(d => d.id === row.dataset_id)?.version || row.dataset_id.slice(0, 8)}<small>{row.analysis_kind === "document" ? "文档 → 文档" : "文档 → 代码"}</small></td>
           <td><a href={"#/projects/" + encodeURIComponent(project.id) + "/runs/" + row.tlr_run_id}>{row.tlr_run_id.slice(0, 8)}</a></td>
           <td>{states[row.status] || row.status}</td><td><a href={consistencyPath(project.id, row.id)+"/original"}>查看分析</a></td></tr>)}</tbody></table></div>
         <Pager page={page} size={20} total={history.total} set={setPage} /></>}
     {open && <StartAnalysis tenant={tenant} project={project} datasets={datasets} runs={runs} close={() => setOpen(false)}
-      changed={changed} prepared={id => { setOpen(false); window.location.hash = consistencyPath(project.id, id) + "/start"; }} />}
+      changed={changed} prepared={id => { setOpen(false); navigate(consistencyPath(project.id, id) + "/start"); }} />}
 
   </section>;
 }
@@ -128,28 +129,28 @@ function StartAnalysis({ tenant, project, datasets, runs, close, prepared, chang
       <label>分析对象<select aria-label="分析对象" value={analysisKind} onChange={e => changeKind(e.target.value as "code" | "document")}><option value="code">文档 → 代码</option><option value="document">文档 → 文档</option></select></label>
       {analysisKind === "document" && <label>判断口径<select aria-label="判断口径" value={relation} onChange={e => setRelation(e.target.value)}><option value="refinement">下游集合是否覆盖、细化源文档</option><option value="agreement">同层文档对应内容是否一致</option></select><small>源文档是本次比较基准；上下文资料只用于解释，不代替目标覆盖。</small></label>}
       <label>资料快照<select aria-label="资料快照" value={datasetId} onChange={e => setDatasetId(e.target.value)}>{datasets.map(d => <option key={d.id} value={d.id}>{d.version} · {date(d.created_at)}</option>)}</select></label>
-      <p className="qm-muted">资料快照是项目资料的固定版本。本次分析使用所选版本，后续上传资料会生成新版本，历史分析仍对应原版本。</p>
+      <p className="muted-text">资料快照是项目资料的固定版本。本次分析使用所选版本，后续上传资料会生成新版本，历史分析仍对应原版本。</p>
       <div className="qm-form-grid qm-consistency-modes">
         <label><input type="radio" name="consistency-mode" checked={mode === "fresh"} onChange={() => resetMode("fresh")} />从零开始</label>
         <label><input type="radio" name="consistency-mode" checked={mode === "existing"} onChange={() => resetMode("existing")} />使用已有 TLR 辅助（含部分完成）</label>
       </div>
-      <p className="qm-muted">{mode === "fresh" ? "从当前快照整理源文档条目，匹配所选目标集合，再判断一致性；会保存新的追踪记录。" : "可选择当前快照已完成或部分完成、源端为文档且目标符合本次分析类型的追踪。仅有引用的工件不可选。"}</p>
+      <p className="muted-text">{mode === "fresh" ? "从当前快照整理源文档条目，匹配所选目标集合，再判断一致性；会保存新的追踪记录。" : "可选择当前快照已完成或部分完成、源端为文档且目标符合本次分析类型的追踪。仅有引用的工件不可选。"}</p>
       {mode === "existing" && <label>辅助追踪<select aria-label="辅助追踪" required value={tlrId} disabled={loading || busy} onChange={e => { setTlrId(e.target.value); setIds([]); setSourceLayer(""); setTargetLayer(""); setTargetIds(analysisKind === "code" ? available.find(r => r.id === e.target.value)?.config.target_ids || [] : []); }}>
         <option value="">请选择一次追踪</option>{available.map(r => <option key={r.id} value={r.id}>{date(r.created_at)} · {r.config.batch_label || (analysisKind === "code" ? "文档 → 代码" : "文档 → 文档")} · {r.id.slice(0, 8)} · {statusLabel[runDisplayStatus(r)]} · {r.counts.links || 0} 条关联</option>)}</select>
         {!loading && !available.length && <p>当前快照没有可用追踪，可以选择“从零开始”。</p>}</label>}
-      {selectedTlr && runDisplayStatus(selectedTlr) === "partial" && <p className="qm-muted">本次复用部分完成追踪中已确认的关联。未完成匹配不代表功能缺失；分析会保留匹配不完整的范围信息。</p>}
+      {selectedTlr && runDisplayStatus(selectedTlr) === "partial" && <p className="muted-text">本次复用部分完成追踪中已确认的关联。未完成匹配不代表功能缺失；分析会保留匹配不完整的范围信息。</p>}
       {loading ? <Loading /> : <>
         <h3>选择源文档</h3>
         <label>源文档层级<select aria-label="源文档层级" required value={sourceLayer} onChange={e => selectSource(e.target.value)}>
           <option value="">请选择一个层级</option>{documentLayers.map(layer => <option key={layer.id} value={layer.id} disabled={!layerAllowed(layer, "source")}>{layer.label} · 全部 {layer.documents.length} 份文档{!layerAllowed(layer, "source") ? "（辅助追踪未覆盖整层）" : ""}</option>)}
         </select></label>
-        <p className="qm-muted">已选 {ids.length} 份源文档。选择层级后包含该层全部有正文的文档；引用节点和包节点不参与分析。</p>
-        {mode === "existing" && <p className="qm-muted">辅助追踪的输入范围须包含所选整层文档，匹配结果可以部分完成；输入范围不包含整层时请使用“从零开始”。</p>}
+        <p className="muted-text">已选 {ids.length} 份源文档。选择层级后包含该层全部有正文的文档；引用节点和包节点不参与分析。</p>
+        {mode === "existing" && <p className="muted-text">辅助追踪的输入范围须包含所选整层文档，匹配结果可以部分完成；输入范围不包含整层时请使用“从零开始”。</p>}
         <h3>选择目标{analysisKind === "code" ? "代码" : "文档"}集合</h3>
         {analysisKind === "document" ? <label>目标文档层级<select aria-label="目标文档层级" required value={targetLayer} onChange={e => { setTargetLayer(e.target.value); setTargetIds(documentLayers.find(l => l.id === e.target.value)?.documents.map(a => a.external_id) || []); }}>
           <option value="">请选择一个层级</option>{documentLayers.map(layer => <option key={layer.id} value={layer.id} disabled={layer.id === sourceLayer || !layerAllowed(layer, "target")}>{layer.label} · 全部 {layer.documents.length} 份文档{layer.id === sourceLayer ? "（已选为源）" : !layerAllowed(layer, "target") ? "（辅助追踪未覆盖整层）" : ""}</option>)}
         </select></label> : <>
-        <div className="qm-toolbar"><button type="button" onClick={() => setTargetIds(targets.map(a => a.external_id))}>选择全部目标</button><button type="button" onClick={() => setTargetIds([])}>清空目标</button></div>
+        <div className="inline-controls"><button type="button" onClick={() => setTargetIds(targets.map(a => a.external_id))}>选择全部目标</button><button type="button" onClick={() => setTargetIds([])}>清空目标</button></div>
         <div style={{ maxHeight: 220, overflow: "auto" }}>{targets.map(a => <label key={a.id} style={{ display: "flex", gap: 8, padding: 6 }}>
           <input type="checkbox" aria-label={"目标：" + (a.structure?.title || a.external_id)} checked={targetIds.includes(a.external_id)}
             onChange={e => setTargetIds(old => e.target.checked ? [...old, a.external_id] : old.filter(id => id !== a.external_id))} />
@@ -158,13 +159,13 @@ function StartAnalysis({ tenant, project, datasets, runs, close, prepared, chang
           <details><summary>查看缺少正文的代码条目（{unavailableCode.length}）</summary><div style={{ maxHeight: 220, overflow: "auto" }}>{unavailableCode.map(a => <label key={a.id} style={{ display: "flex", gap: 8, padding: 6 }}><input type="checkbox" disabled />{a.structure?.title || a.external_id}<small>缺少源码正文 · {a.locator}</small></label>)}</div></details></>}
         {!targets.length && !unavailableCode.length && <p>{mode === "existing" && !selectedTlr ? "选择辅助追踪后显示目标代码。" : "当前快照没有代码正文，请上传源码或选择包含源码的资料快照。"}</p>}
         </>}
-        <p className="qm-muted">已选 {chosenTargets.length} 份目标；将联合检查整组目标，结论仅限所选范围。</p>
+        <p className="muted-text">已选 {chosenTargets.length} 份目标；将联合检查整组目标，结论仅限所选范围。</p>
       </>}
     </fieldset>
     {error && <Alert>{error}</Alert>}
     {createdTlr && <p>已创建追踪：<a href={"#/projects/" + encodeURIComponent(project.id) + "/runs/" + createdTlr}>{createdTlr.slice(0, 8)}</a></p>}
     {busy && <p role="status">{stage}… 请保持页面打开，后续步骤将依次执行。</p>}
-    <footer><button type="button" disabled={busy} onClick={close}>取消</button><button className="qm-primary" disabled={busy || loading || !ids.length || (!chosenTargets.length || (mode === "existing" && !selectedTlr))}>{busy ? "正在准备…" : "开始一致性分析"}</button></footer>
+    <footer><button type="button" disabled={busy} onClick={close}>取消</button><button className="primary-button" disabled={busy || loading || !ids.length || (!chosenTargets.length || (mode === "existing" && !selectedTlr))}>{busy ? "正在准备…" : "开始一致性分析"}</button></footer>
   </form></Modal>;
 }
 
@@ -206,8 +207,8 @@ export function AnalysisReport({ tenant, project, id, view = "original", unitId 
     {error && <Alert>{error}</Alert>}
     {!report ? (!error && <Loading />) : <>
       <p><code>{report.id.slice(0, 8)}</code> · {busy ? "分析中" : states[report.status] || report.status} · {date(report.created_at)}</p>
-      <div className="qm-toolbar">
-        {(report.status === "prepared" || report.status === "failed") && <button className="qm-primary" disabled={busy} onClick={execute}>{busy ? "正在判断…" : report.status === "prepared" ? "执行一致性判断" : "重试失败的判断"}</button>}
+      <div className="inline-controls">
+        {(report.status === "prepared" || report.status === "failed") && <button className="primary-button" disabled={busy} onClick={execute}>{busy ? "正在判断…" : report.status === "prepared" ? "执行一致性判断" : "重试失败的判断"}</button>}
         <button disabled={busy} onClick={() => setTick(v => v + 1)}>刷新</button><button onClick={download}>下载完整 JSON</button>
       </div>
       {report.status === "prepared" && <p>证据已保存，执行后将逐条判断代码实现情况。</p>}
