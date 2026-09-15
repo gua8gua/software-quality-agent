@@ -1,0 +1,130 @@
+{
+  "snapshot_date": "2026-09-04",
+  "scope": "general software quality management: artifact quality, cross-artifact consistency, traceability, requirements coverage, and executable validation",
+  "notes": [
+    "PDF files were downloaded for local full-text review; extracted text is under artifacts/text.",
+    "Standards are represented by official metadata links only; no copyrighted full standard text is included.",
+    "Recent 2026 preprints are hypotheses/baselines to reproduce, not established production evidence."
+  ],
+  "papers": [
+    {
+      "id": "frattini-rqt-2023",
+      "title": "A Harmonized Requirements Quality Theory",
+      "url": "https://doi.org/10.1007/s00766-023-00405-y",
+      "local_pdf": "papers/2023_requirements_quality_theory.pdf",
+      "sha256": "ee56891624cfe88f862ee46a84162cce0e267020bd0e5df482d0dfe4f48d3141",
+      "local_text": "artifacts/text/2023_requirements_quality_theory.txt",
+      "evidence_tier": "peer_reviewed"
+    },
+    {
+      "id": "zakeri-arta-2024",
+      "title": "Natural Language Requirements Testability Measurement Based on Requirement Smells",
+      "url": "https://arxiv.org/abs/2403.17479",
+      "code": "https://github.com/m-zakeri/ARTA",
+      "local_pdf": "papers/2024_arta_requirement_testability.pdf",
+      "sha256": "186e3c2fd64e81e73965256ada3a0d582cad4f536f4eb1e292d9f9ddb431a679",
+      "local_text": "artifacts/text/2024_arta_requirement_testability.txt",
+      "evidence_tier": "peer_reviewed_with_artifacts"
+    },
+    {
+      "id": "frattini-artifacts-2024",
+      "title": "Requirements Quality Research Artifacts: Recovery, Analysis, and Management Guideline",
+      "url": "https://arxiv.org/abs/2406.01055",
+      "local_pdf": "papers/2024_requirements_quality_artifacts.pdf",
+      "sha256": "7e2d21588bc6acc602a9c041707b3d6073a5c4dd67d0c6233958af3b730d95fe",
+      "local_text": "artifacts/text/2024_requirements_quality_artifacts.txt",
+      "evidence_tier": "peer_reviewed_with_replication_package"
+    },
+    {
+      "id": "venhoff-consistency-2023",
+      "title": "Leveraging Natural Language Processing for a Consistency Checking Toolchain of Automotive Requirements",
+      "url": "https://www.se-rwth.de/publications/Leveraging-Natural-Language-Processing-for-a-Consistency-Checking-Toolchain-of-Automotive-Requirements.pdf",
+      "local_pdf": "papers/2023_requirements_consistency_toolchain.pdf",
+      "sha256": "42d4897f70affed23a40d39afceaf96d5edd815ade0b2d2bf2bc40398f70bbcd",
+      "local_text": "artifacts/text/2023_requirements_consistency_toolchain.txt",
+      "evidence_tier": "peer_reviewed_prototype"
+    },
+    {
+      "id": "wang-redast-slr-2025",
+      "title": "Requirements-Driven Automated Software Testing: A Systematic Review",
+      "url": "https://arxiv.org/abs/2502.18694",
+      "local_pdf": "papers/2025_requirements_driven_testing_slr.pdf",
+      "sha256": "fbcd27645d59b37834a7fa2fb167883c39113b7f03eca0d9a2c25ef39dc822ae",
+      "local_text": "artifacts/text/2025_requirements_driven_testing_slr.txt",
+      "evidence_tier": "systematic_review_preprint"
+    },
+    {
+      "id": "agent-tests-2026",
+      "title": "Rethinking the Value of Agent-Generated Tests for LLM-Based Software Engineering Agents",
+      "url": "https://arxiv.org/abs/2602.07900",
+      "local_pdf": "papers/2026_agent_generated_tests.pdf",
+      "sha256": "c330fd8bfc97801fb910ba4f83049d2fa8e574e45aa9d24d8406cb080e6005b9",
+      "local_text": "artifacts/text/2026_agent_generated_tests.txt",
+      "evidence_tier": "recent_preprint"
+    },
+    {
+      "id": "spec-driven-tests-2026",
+      "title": "Grounding AI Agents in Contracts: Spec-Driven Test Generation",
+      "url": "https://arxiv.org/abs/2608.17177",
+      "local_pdf": "papers/2026_spec_driven_test_generation.pdf",
+      "sha256": "26462b014d182346297287a6b2f76d8d5587623dc0e059b966e54c0ae137f03e",
+      "local_text": "artifacts/text/2026_spec_driven_test_generation.txt",
+      "evidence_tier": "recent_preprint"
+    },
+    {
+      "id": "swe-gate-2026",
+      "title": "SWE-Gate: Passing Functional Tests Is Not Enough for Software Engineering Agents",
+      "url": "https://arxiv.org/abs/2609.04167",
+      "code": "https://github.com/DeepSoftwareAnalytics/SWE-Gate",
+      "local_pdf": "papers/2026_swe_gate.pdf",
+      "sha256": "d775be6f8c07c199fe6d8174e5d942e759ee34b1795c788f204223ff99b78555",
+      "local_text": "artifacts/text/2026_swe_gate.txt",
+      "evidence_tier": "very_recent_preprint"
+    }
+  ],
+  "project_and_dataset_sources": [
+    {
+      "id": "lissa",
+      "url": "https://github.com/ardoco/lissa",
+      "paper": "https://ardoco.de/c/icse25",
+      "use": "generic traceability-link-recovery baseline"
+    },
+    {
+      "id": "safa-artifacts-dronology",
+      "url": "https://github.com/SAREC-Lab/SAFA-Artifacts",
+      "use": "versioned safety artifact and change-impact benchmark"
+    },
+    {
+      "id": "loom",
+      "url": "https://github.com/jsuppe/loom",
+      "use": "engineering workflow inspiration only"
+    }
+  ],
+  "standards": [
+    {
+      "id": "iso-25010-2023",
+      "url": "https://www.iso.org/standard/78176.html",
+      "use": "product quality model"
+    },
+    {
+      "id": "iso-29148-2018",
+      "url": "https://www.iso.org/standard/72089.html",
+      "use": "requirements engineering processes and information items"
+    },
+    {
+      "id": "iso-29119-series",
+      "url": "https://committee.iso.org/sites/jtc1sc7/home/projects/flagship-standards/isoiecieee-29119-series.html",
+      "use": "software testing process and documentation"
+    },
+    {
+      "id": "w3c-prov-o",
+      "url": "https://www.w3.org/TR/prov-o/",
+      "use": "provenance semantics"
+    },
+    {
+      "id": "sarif-2.1.0",
+      "url": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/sarif-v2.1.0-os.html",
+      "use": "static-analysis result interchange"
+    }
+  ]
+}

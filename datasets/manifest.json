@@ -1,0 +1,124 @@
+{
+  "manifest_version": 1,
+  "downloaded_at": "2026-09-05",
+  "datasets": [
+    {
+      "id": "arta-requirement-testability-r1",
+      "name": "ARTA Requirement Testability Dataset Release 1",
+      "source_url": "https://github.com/m-zakeri/ARTA",
+      "source_revision": "493297655cd653f8ebc797ef5c3c7ee2f736ab4c",
+      "license": "MIT",
+      "local_path": "arta-requirement-testability",
+      "tasks": ["requirement_smell_detection", "requirement_testability"],
+      "counts": {
+        "DS1": 985,
+        "DS2": 1092,
+        "DS3": 1522,
+        "DS4": 1153,
+        "smelly_words_dictionary": 1000
+      },
+      "files": [
+        {
+          "path": "arta-requirement-testability/ARTADataset_release1.zip",
+          "bytes": 1312856,
+          "sha256": "74e5b96c503a8b4e84af33f646b089aa76d156b3c9564aa4d68b0dae2690089f"
+        }
+      ],
+      "validation": ["zip_paths_safe", "26_entries_extracted", "xlsx_headers_and_dimensions_read"]
+    },
+    {
+      "id": "safa-dronology-v0-v1",
+      "name": "SAFA Artifacts: Dronology V0 and V1",
+      "source_url": "https://github.com/SAREC-Lab/SAFA-Artifacts",
+      "source_revision": "ac201a4a7364cf91110c33a9f5b41df9ffbfe709",
+      "license": "MIT",
+      "local_path": "safa-dronology-v0-v1",
+      "tasks": ["multi_artifact_traceability", "change_impact", "stale_link_detection"],
+      "counts": {
+        "V0_trees": 16,
+        "V0_recursive_node_occurrences": 263,
+        "V1_trees": 16,
+        "V1_recursive_node_occurrences": 382
+      },
+      "files": [
+        {
+          "path": "safa-dronology-v0-v1/V0-simplified.json",
+          "bytes": 166738,
+          "sha256": "bfc543acfa98e3eb186c2b8d1f3ccc06a05dba4ec06085c0fe546dc126c58dbd"
+        },
+        {
+          "path": "safa-dronology-v0-v1/V1-simplified.json",
+          "bytes": 261412,
+          "sha256": "5191fe6d06133a8fcab8fa3cf15f44f3168a1a79495846158b49381219a103c0"
+        }
+      ],
+      "validation": ["json_parse_valid", "source_readme_and_license_saved"]
+    },
+    {
+      "id": "lissa-smos-req2code",
+      "name": "LiSSA SMOS Requirement-to-Code Dataset",
+      "source_url": "https://github.com/ArDoCo/Replication-Package-ICSE25_LiSSA-Toward-Generic-Traceability-Link-Recovery-through-RAG",
+      "source_revision": "a8e652f29bbdcc4bdcd3d98cd85aa4a37cb65480",
+      "license": "MIT",
+      "local_path": "lissa-smos-req2code",
+      "tasks": ["requirement_to_code_trace_recovery", "trace_link_validation"],
+      "counts": {
+        "source_use_cases": 67,
+        "target_classes": 100,
+        "gold_links": 1044
+      },
+      "files": [
+        {
+          "path": "lissa-smos-req2code/source_req.xml",
+          "bytes": 5843,
+          "sha256": "03f01a7f1951e7be1593a797498d89c0dc856ba6559bb71e9597135f065ecc93"
+        },
+        {
+          "path": "lissa-smos-req2code/target_code.xml",
+          "bytes": 11167,
+          "sha256": "e7bd883ab79517ab5569ebd8d10c0f42452e5ef625f63e0f227dedfdde11bc05"
+        },
+        {
+          "path": "lissa-smos-req2code/answer_req_code.xml",
+          "bytes": 126217,
+          "sha256": "dbd5758b5ca063d0887c33afab611f76e6fecfe99bdfe066a55c169b36d9d15e"
+        }
+      ],
+      "validation": ["xml_parse_valid", "67_source_artifacts", "100_target_artifacts", "1044_gold_links"]
+    },
+    {
+      "id": "irrelevant-requirements-v1",
+      "name": "Irrelevant Requirements",
+      "source_url": "https://figshare.com/articles/dataset/Irrelevant_Requirements/19380545",
+      "doi": "10.6084/m9.figshare.19380545.v1",
+      "license": "CC-BY-4.0",
+      "local_path": "irrelevant-requirements",
+      "tasks": ["requirement_relevance", "actor_action_extraction"],
+      "counts": {
+        "projects": 14,
+        "records": 621,
+        "relevant": 557,
+        "irrelevant": 64
+      },
+      "schema": ["reqs_statement", "action_part", "actor_part", "label"],
+      "files": [
+        {"path": "irrelevant-requirements/da01.arff", "md5": "0395dd9cce4ce334a1de3c6a487b5ea6"},
+        {"path": "irrelevant-requirements/da02.arff", "md5": "676eb047b31e5f38d7b63b4a76d26506"},
+        {"path": "irrelevant-requirements/da03.arff", "md5": "43781a8655407f1db00e9c0f1a9d4c8b"},
+        {"path": "irrelevant-requirements/da04.arff", "md5": "3ede08fa6d08dc49c6affa040e759145"},
+        {"path": "irrelevant-requirements/da05.arff", "md5": "8787783d4d86b7f248414af9cdef03c2"},
+        {"path": "irrelevant-requirements/da06.arff", "md5": "b8453da56a8b93aa1bb3e4f93997f133"},
+        {"path": "irrelevant-requirements/da07.arff", "md5": "47d4f43c131865014b937491b01cfb1e"},
+        {"path": "irrelevant-requirements/da08.arff", "md5": "b143a470b890bc9edde7ed7b3f81e019"},
+        {"path": "irrelevant-requirements/da09.arff", "md5": "3eec9f04ba0256d20905f1a635f3f871"},
+        {"path": "irrelevant-requirements/da10.arff", "md5": "72d32de9d19c119aa52a9637ab99a24a"},
+        {"path": "irrelevant-requirements/da11.arff", "md5": "0e10eb36ebb7c830d75024d29771178a"},
+        {"path": "irrelevant-requirements/da12.arff", "md5": "ec2b6ca8646f0c92037585e946a3c78f"},
+        {"path": "irrelevant-requirements/da13.arff", "md5": "901420c2991b7fc5edff6337f6bb15f2"},
+        {"path": "irrelevant-requirements/da14.arff", "md5": "7380054bdc5bfde6912dfe04b8f338ab"}
+      ],
+      "validation": ["14_of_14_upstream_md5_matches", "621_arff_records_parsed"]
+    }
+  ]
+}
+

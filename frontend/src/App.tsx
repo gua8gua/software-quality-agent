@@ -1,6 +1,9 @@
+import ProjectsPanel from "./quality/ProjectsPanel";
+import { navigate, useHashRoute } from "./navigation";
 import {
   Database,
   FileText,
+  FileUp,
   MessageSquareText,
   RefreshCw,
   Send,
@@ -8,7 +11,7 @@ import {
   Sparkles,
   Table2,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   generateReport,
   listChatHistory,
@@ -17,6 +20,7 @@ import {
   loadSchema,
   readDatabase,
   sendChat,
+  extractRequirements,
   writeDatabase,
 } from "./api";
 import { mockMessages } from "./mock";
@@ -28,14 +32,27 @@ import type {
   ProjectSummary,
   ReportSummary,
   ReportType,
+  RequirementExtractionResponse,
   ViewId,
   WriteOperation,
 } from "./types";
 
 const views: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
+  { id: "models", label: "模型配置", icon: <Sparkles size={18} /> },
+  { id: "quality", label: "项目资料库", icon: <Database size={18} /> },
   { id: "chat", label: "对话", icon: <MessageSquareText size={18} /> },
   { id: "report", label: "报告生成", icon: <FileText size={18} /> },
-  { id: "database", label: "数据库读写", icon: <Database size={18} /> },
+  { id: "requirements", label: "需求拆分", icon: <FileUp size={18} /> },
+];
+
+const readScopes: Array<{ id: DatabaseScope; label: string }> = [
+  { id: "artifacts", label: "资产" }, { id: "trace_links", label: "追踪关系" },
+  { id: "reports", label: "报告" }, { id: "audit_events", label: "审计事件" },
+];
+const writeOperations: Array<{ id: WriteOperation; label: string }> = [
+  { id: "add_project", label: "新增项目" }, { id: "add_artifact", label: "新增资产" },
+  { id: "add_trace_link", label: "新增追踪关系" }, { id: "append_chat", label: "追加对话" },
+  { id: "save_report", label: "保存报告" }, { id: "log_event", label: "记录事件" },
 ];
 
 const reportTypes: Array<{ id: ReportType; label: string; hint: string }> = [
@@ -43,23 +60,6 @@ const reportTypes: Array<{ id: ReportType; label: string; hint: string }> = [
   { id: "traceability", label: "追踪分析", hint: "需求-设计-代码-测试" },
   { id: "coverage", label: "覆盖分析", hint: "测试与需求覆盖" },
   { id: "custom", label: "专题报告", hint: "可自定义关注点" },
-];
-
-const readScopes: Array<{ id: DatabaseScope; label: string }> = [
-  { id: "projects", label: "项目" },
-  { id: "artifacts", label: "资产" },
-  { id: "trace_links", label: "追踪关系" },
-  { id: "reports", label: "报告" },
-  { id: "audit_events", label: "审计事件" },
-];
-
-const writeOperations: Array<{ id: WriteOperation; label: string }> = [
-  { id: "add_project", label: "新增项目" },
-  { id: "add_artifact", label: "新增资产" },
-  { id: "add_trace_link", label: "新增追踪关系" },
-  { id: "append_chat", label: "追加对话" },
-  { id: "save_report", label: "保存报告" },
-  { id: "log_event", label: "记录事件" },
 ];
 
 const qualityModes = [
@@ -85,7 +85,7 @@ function defaultWritePayload(operation: WriteOperation, projectId: string): stri
       name: "requirements.md",
       path: "docs/requirements.md",
       version: "v1.0",
-      content: "系统应支持质量分析、报告生成和数据库读写。",
+      content: "系统应支持质量分析、报告生成和全生命周期资料追踪。",
       meta: { source: "lifecycle" },
     },
     add_trace_link: {
@@ -120,7 +120,23 @@ function defaultWritePayload(operation: WriteOperation, projectId: string): stri
 }
 
 function App() {
-  const [activeView, setActiveView] = useState<ViewId>("chat");
+  const route = useHashRoute();
+  const activeView: ViewId = route[0] === "projects" ? "quality" : route[0] === "models" ? "models"
+    : ["report", "requirements"].includes(route[0]) ? route[0] as ViewId : "chat";
+  const qualityVisible = activeView === "quality" || activeView === "models";
+  const lastProjectPath = useRef("/projects");
+  const lastQualityRoute = useRef<string[]>(["projects"]);
+  if (qualityVisible) lastQualityRoute.current = route;
+  if (route[0] === "projects") lastProjectPath.current = "/" + route.map(encodeURIComponent).join("/");
+  const [tenant, setTenant] = useState(import.meta.env.VITE_TENANT_ID || "local");
+  const [tenantDraft, setTenantDraft] = useState(tenant);
+  const [qualityVisited, setQualityVisited] = useState(qualityVisible);
+  useEffect(() => { if (qualityVisible) setQualityVisited(true); }, [qualityVisible]);
+  useEffect(() => { window.scrollTo(0, 0); }, [route.join("/")]);
+  function openView(view: ViewId) {
+    navigate(view === "quality" ? lastProjectPath.current : `/${view}`);
+  }
+
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [schema, setSchema] = useState<DatabaseSchema | null>(null);
@@ -132,6 +148,9 @@ function App() {
   const [reportSourceKinds, setReportSourceKinds] = useState<string[]>(["requirement", "design", "code", "test"]);
   const [reportPreview, setReportPreview] = useState("");
   const [reportHistory, setReportHistory] = useState<ReportSummary[]>([]);
+  const [requirementResult, setRequirementResult] = useState<RequirementExtractionResponse | null>(null);
+  const [requirementFile, setRequirementFile] = useState<File | null>(null);
+  const [requirementError, setRequirementError] = useState("");
   const [readScope, setReadScope] = useState<DatabaseScope>("artifacts");
   const [readKeyword, setReadKeyword] = useState("");
   const [readLimit, setReadLimit] = useState(20);
@@ -275,6 +294,25 @@ function App() {
         ...current,
       ]);
       notify("报告已生成");
+    } finally {
+      setBusy(false);
+    }
+
+  }
+
+  async function handleExtractRequirements() {
+    if (!requirementFile) {
+      setRequirementError("请先选择一个 PDF 文件");
+      return;
+    }
+    setBusy(true);
+    setRequirementError("");
+    try {
+      const response = await extractRequirements(requirementFile);
+      setRequirementResult(response);
+      notify(`已拆分 ${response.requirements.length} 条需求`);
+    } catch (error) {
+      setRequirementError(error instanceof Error ? error.message : "PDF 解析失败");
     } finally {
       setBusy(false);
     }
@@ -699,6 +737,89 @@ function App() {
     );
   }
 
+  function renderRequirementsView() {
+    return (
+      <section className="workspace-grid report-grid">
+        <article className="surface panel-primary">
+          <div className="panel-header">
+            <div>
+              <span className="eyebrow">需求工程</span>
+              <h3>上传项目 PDF，自动拆分需求</h3>
+            </div>
+            <FileText size={22} />
+          </div>
+          <p className="lead">
+            系统会提取 PDF 文本，调用需求分析 Agent，将项目内容拆分为可实现、可验证、可追踪的需求点。
+          </p>
+          <label className="upload-dropzone">
+            <FileUp size={28} />
+            <strong>{requirementFile?.name ?? "选择项目 PDF 文件"}</strong>
+            <span>仅支持 PDF，建议上传包含文本层的项目说明书</span>
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={(event) => {
+                setRequirementFile(event.target.files?.[0] ?? null);
+                setRequirementError("");
+              }}
+            />
+          </label>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={handleExtractRequirements}
+            disabled={busy || !requirementFile}
+          >
+            <Sparkles size={16} />
+            <span>{busy ? "解析中..." : "开始拆分需求"}</span>
+          </button>
+          {requirementError ? <p className="feedback error-text">{requirementError}</p> : null}
+          {requirementResult ? (
+            <div className="surface inset">
+              <div className="panel-header compact">
+                <div>
+                  <span className="eyebrow">项目理解</span>
+                  <h3>{requirementResult.source_filename}</h3>
+                </div>
+                <span className="mini-pill">{requirementResult.page_count} 页</span>
+              </div>
+              <p className="lead">{requirementResult.project_summary}</p>
+              {requirementResult.warnings.length ? (
+                <ul className="bullet-list warning-list">
+                  {requirementResult.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+        </article>
+
+        <aside className="side-stack">
+          <section className="surface">
+            <div className="panel-header compact">
+              <div>
+                <span className="eyebrow">结构化结果</span>
+                <h3>需求列表</h3>
+              </div>
+              <span className="mini-pill">{requirementResult?.requirements.length ?? 0} 条</span>
+            </div>
+            {requirementResult?.requirements.length ? (
+              <div className="requirement-list">
+                {requirementResult.requirements.map((requirement) => (
+                  <article className="requirement-card" key={requirement.requirement_id}>
+                    <strong>{requirement.requirement_id}</strong>
+                    <p>{requirement.statement}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="muted-text">上传 PDF 并开始拆分后，这里会显示结构化需求。</p>
+            )}
+          </section>
+        </aside>
+      </section>
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -715,7 +836,8 @@ function App() {
             <button
               key={view.id}
               className={`nav-item ${activeView === view.id ? "active" : ""}`}
-              onClick={() => setActiveView(view.id)}
+              aria-current={activeView === view.id ? "page" : undefined}
+              onClick={() => openView(view.id)}
               type="button"
             >
               {view.icon}
@@ -724,43 +846,16 @@ function App() {
           ))}
         </nav>
 
-        <section className="surface sidebar-block">
-          <span className="eyebrow">项目</span>
-          <div className="project-list">
-            {projects.map((project) => (
-              <button
-                key={project.id}
-                className={`project-item ${selectedProjectId === project.id ? "active" : ""}`}
-                onClick={() => setSelectedProjectId(project.id)}
-                type="button"
-              >
-                <strong>{project.name}</strong>
-                <small>
-                  {project.status} · {project.artifact_count} assets
-                </small>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="surface sidebar-block">
-          <div className="side-header">
-            <ShieldCheck size={16} />
-            <span>连接状态</span>
-          </div>
-          <strong>{selectedProject?.name ?? "未选择项目"}</strong>
-          <p>{selectedProject?.description ?? "等待项目加载"}</p>
-        </section>
       </aside>
 
       <main className="workspace">
         <header className="topbar">
           <div>
             <span className="eyebrow">Software Quality Agent</span>
-            <h2>{selectedProject?.name ?? "质量工作台"}</h2>
-            <p className="lead">{selectedProject?.description ?? "请选择一个项目开始分析"}</p>
+            <h2>{qualityVisible ? activeView === "models" ? "模型配置" : "项目资料库" : activeView === "chat" ? "质量问答" : activeView === "report" ? "报告生成" : "需求拆分"}</h2>
+            <p className="lead">{qualityVisible ? "软件资料、追踪检测与一致性分析" : "面向软件生命周期的质量分析工作台"}</p>
           </div>
-          <div className="status-strip">
+          <div className="status-strip" hidden={qualityVisible}>
             <span className="status-pill">
               <Sparkles size={14} />
               {selectedProject?.artifact_count ?? 0} 资产
@@ -776,9 +871,12 @@ function App() {
           </div>
         </header>
 
+        <section className="quality-panel" hidden={!qualityVisible} aria-label="项目资料库工作台">
+          {(qualityVisited || qualityVisible) && <ProjectsPanel route={lastQualityRoute.current} tenant={tenant} tenantDraft={tenantDraft} onTenantDraft={setTenantDraft} onTenantChange={() => setTenant(tenantDraft.trim())} />}
+        </section>
         {activeView === "chat" ? renderChatView() : null}
         {activeView === "report" ? renderReportView() : null}
-        {activeView === "database" ? renderDatabaseView() : null}
+        {activeView === "requirements" ? renderRequirementsView() : null}
       </main>
 
       {toast ? <div className="toast">{toast}</div> : null}

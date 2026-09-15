@@ -39,6 +39,18 @@ node_modules/
 logs/
 reports/
 outputs/
+artifacts/
+playwright-report/
+test-results/
+
+# Downloaded knowledge-base payloads (large and/or subject to source licenses).
+# Keep the reproducible catalog in Git; rebuild local payloads with the download script.
+datasets/knowledge-base/*
+!datasets/knowledge-base/README.md
+!datasets/knowledge-base/manifest.json
+!datasets/knowledge-base/Standards KB/
+datasets/knowledge-base/Standards KB/*
+!datasets/knowledge-base/Standards KB/standards-catalog.json
 
 # Editor and operating-system files
 .idea/

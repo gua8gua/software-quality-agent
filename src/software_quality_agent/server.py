@@ -3,9 +3,10 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request
+import httpx
+from fastapi import Depends, FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
@@ -78,6 +79,18 @@ def build_app() -> FastAPI:
     ):
         return await service.generate_report(request)
 
+    @app.post("/api/requirements/extract")
+    async def extract_requirements(
+        file: UploadFile = File(...),
+        service: QualityAgentService = Depends(get_service),
+    ):
+        if file.content_type not in {"application/pdf", "application/octet-stream"}:
+            raise ValueError("只支持上传 PDF 文件")
+        return await service.extract_requirements(
+            filename=file.filename or "project.pdf",
+            content=await file.read(),
+        )
+
     @app.get("/api/reports")
     async def list_reports(project_id: str, service: QualityAgentService = Depends(get_service)):
         return await service.reports(project_id)
@@ -101,6 +114,26 @@ def build_app() -> FastAPI:
     @app.exception_handler(ValueError)
     async def handle_value_error(_request: Request, exc: ValueError) -> JSONResponse:
         return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.api_route("/api/v1/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"], include_in_schema=False)
+    async def quality_backend(path: str, request: Request):
+        # Keep the quality service separate while serving both panels on one origin.
+        excluded = {"host", "connection", "content-length", "transfer-encoding", "accept-encoding"}
+        headers = {key: value for key, value in request.headers.items() if key.lower() not in excluded}
+        try:
+            async with httpx.AsyncClient(timeout=600.0) as client:
+                upstream = await client.request(
+                    request.method,
+                    f"{settings.quality_backend_url.rstrip('/')}/api/v1/{path}",
+                    params=request.query_params.multi_items(),
+                    headers=headers,
+                    content=await request.body(),
+                )
+        except httpx.RequestError:
+            return JSONResponse(status_code=502, content={"detail": "Quality backend unavailable"})
+        excluded.update({"content-encoding", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailer", "upgrade"})
+        return Response(content=upstream.content, status_code=upstream.status_code,
+                        headers={key: value for key, value in upstream.headers.items() if key.lower() not in excluded})
 
     if FRONTEND_DIST.is_dir():
         app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
