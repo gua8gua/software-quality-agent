@@ -42,9 +42,9 @@ export function ConsistencyPanel({ tenant, project, datasets, runs, refresh, cha
     return () => clearTimeout(timer);
   }, [history]);
   return <section className="qm-inset">
-    <div className="inline-controls"><div><h3>生命周期一致性分析</h3><p className="muted-text">选择文档与代码，或选择不同生命周期文档，检查实现、集合覆盖与矛盾。</p></div>
+    <div className="analysis-toolbar"><div><h3>生命周期一致性分析</h3><p className="muted-text">选择文档与代码，或选择不同生命周期文档，检查实现、集合覆盖与矛盾。</p></div><div className="inline-controls toolbar-actions">
       <button className="primary-button" disabled={!datasets.length} onClick={() => setOpen(true)}>新建一致性分析</button>
-      <button onClick={() => setTick(v => v + 1)}>刷新记录</button></div>
+      <button onClick={() => setTick(v => v + 1)}>刷新记录</button></div></div>
     {error && <Alert>{error}</Alert>}
     {!history ? (!error && <Loading />) : !history.items.length ? <Empty title="还没有一致性分析记录"><p>可以复用所选类型的已完成追踪，也可以从项目文档和代码重新开始。</p></Empty> :
       <><div className="table-wrap"><table className="data-table"><thead><tr><th>分析 / 创建时间</th><th>资料快照 / 分析类型</th><th>辅助 TLR</th><th>状态</th><th /></tr></thead>
@@ -202,22 +202,22 @@ export function AnalysisReport({ tenant, project, id, view = "original", unitId 
     const link = document.createElement("a"); link.href = href; link.download = "consistency-" + id + ".json"; link.click();
     setTimeout(() => URL.revokeObjectURL(href), 1000);
   }
-  return <><a className="qm-back" href={"#/projects/" + encodeURIComponent(project) + "/analyses"}>返回一致性分析列表</a><h1>一致性分析详情</h1>
+  return <div className="consistency-detail-page"><div className="consistency-detail-nav"><a className="qm-back" href={"#/projects/" + encodeURIComponent(project) + "/analyses"}>返回一致性分析列表</a></div><div className="consistency-detail-title"><div><div className="eyebrow">CONSISTENCY ANALYSIS</div><h1>一致性分析详情</h1></div></div>
     <div className="qm-consistency-report">
     {error && <Alert>{error}</Alert>}
     {!report ? (!error && <Loading />) : <>
-      <p><code>{report.id.slice(0, 8)}</code> · {busy ? "分析中" : states[report.status] || report.status} · {date(report.created_at)}</p>
-      <div className="inline-controls">
+      <div className="consistency-status-bar"><div><span>任务 ID</span><code>{report.id.slice(0, 8)}</code></div><div><span>执行时间</span><strong>{date(report.created_at)}</strong></div><div><span>状态</span><span className={`mini-pill ${report.status === "failed" ? "failed" : report.status === "completed" ? "completed" : ""}`}>{busy ? "分析中" : states[report.status] || report.status}</span></div></div>
+      <div className="consistency-actions inline-controls">
         {(report.status === "prepared" || report.status === "failed") && <button className="primary-button" disabled={busy} onClick={execute}>{busy ? "正在判断…" : report.status === "prepared" ? "执行一致性判断" : "重试失败的判断"}</button>}
         <button disabled={busy} onClick={() => setTick(v => v + 1)}>刷新</button><button onClick={download}>下载完整 JSON</button>
       </div>
-      {report.status === "prepared" && <p>证据已保存，执行后将逐条判断代码实现情况。</p>}
-      {busy && <p role="status">正在联合判断目标集合对源文档各部分的对应情况…</p>}
+      {report.status === "prepared" && <p className="consistency-note">证据已保存，执行后将逐条判断代码实现情况。</p>}
+      {busy && <p className="consistency-note" role="status">正在联合判断目标集合对源文档各部分的对应情况…</p>}
       {report.results.error && <Alert>{report.results.error}</Alert>}
-      <p>已处理 {report.metrics.processed_requirements} / {report.metrics.selected_requirements} 份源文档。以下结果允许共存，结论仅限所选目标集合，局部对应不代表整体满足。</p>
-      <div className="qm-summary-strip">{Object.entries(displayLabels).map(([value, label]) => <div key={value}><strong>{report.metrics.outcome_counts[value as Outcome] || 0}</strong><span>{label}</span></div>)}</div>
+      <p className="consistency-note">已处理 {report.metrics.processed_requirements} / {report.metrics.selected_requirements} 份源文档。以下结果允许共存，结论仅限所选目标集合，局部对应不代表整体满足。</p>
+      <div className="consistency-metrics">{Object.entries(displayLabels).map(([value, label]) => <div key={value} className={value === "error" ? "is-alert" : ""}><strong>{report.metrics.outcome_counts[value as Outcome] || 0}</strong><span>{label}</span></div>)}</div>
       <ConsistencyExplorer report={report} tenant={tenant} project={project} view={view} unitId={unitId} />
     </>}
     </div>
-  </>;
+  </div>;
 }

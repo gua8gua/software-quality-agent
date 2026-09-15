@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { all, errorText, get, type Artifact, type Run } from "./api";
+import { all, errorText, get, getArtifactContent, type Artifact, type Run } from "./api";
 import { Alert, Empty, Loading, Pager } from "./common";
 import { buildModel, descendants, originalKey, unitKinds, unitRelations, type ConsistencyModel, type Outcome, type Report, type Unit } from "./consistencyModel";
 import "./ConsistencyExplorer.css";
@@ -31,7 +31,7 @@ function UnitDetail({ unit, model, report, base, tenant, project, labels }: { un
   useEffect(() => {
     setBody(unit.text); setError(""); if (unit.text !== undefined || !artifact) return;
     let active = true;
-    get<Artifact>(`/artifacts/${artifact.id}`, tenant, project).then(a => { if (active) setBody(unit.type === "artifact" ? a.content : Array.from(a.content || "").slice(unit.start, unit.end).join("")); }).catch(e => { if (active) setError(errorText(e)); });
+    getArtifactContent(artifact.id, tenant, project).then(a => { if (!active) return; if (!a.available || a.content === null) { setError(a.reason || "当前资料没有可用正文。"); return; } setBody(unit.type === "artifact" ? a.content : Array.from(a.content).slice(unit.start, unit.end).join("")); }).catch(e => { if (active) setError(errorText(e)); });
     return () => { active = false; };
   }, [unit, artifact, tenant, project]);
   const keys = descendants(model, unit);

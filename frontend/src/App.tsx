@@ -43,7 +43,16 @@ const views: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
   { id: "chat", label: "对话", icon: <MessageSquareText size={18} /> },
   { id: "report", label: "报告生成", icon: <FileText size={18} /> },
   { id: "requirements", label: "需求拆分", icon: <FileUp size={18} /> },
-  { id: "database", label: "数据库读写", icon: <Database size={18} /> },
+];
+
+const readScopes: Array<{ id: DatabaseScope; label: string }> = [
+  { id: "artifacts", label: "资产" }, { id: "trace_links", label: "追踪关系" },
+  { id: "reports", label: "报告" }, { id: "audit_events", label: "审计事件" },
+];
+const writeOperations: Array<{ id: WriteOperation; label: string }> = [
+  { id: "add_project", label: "新增项目" }, { id: "add_artifact", label: "新增资产" },
+  { id: "add_trace_link", label: "新增追踪关系" }, { id: "append_chat", label: "追加对话" },
+  { id: "save_report", label: "保存报告" }, { id: "log_event", label: "记录事件" },
 ];
 
 const reportTypes: Array<{ id: ReportType; label: string; hint: string }> = [
@@ -51,23 +60,6 @@ const reportTypes: Array<{ id: ReportType; label: string; hint: string }> = [
   { id: "traceability", label: "追踪分析", hint: "需求-设计-代码-测试" },
   { id: "coverage", label: "覆盖分析", hint: "测试与需求覆盖" },
   { id: "custom", label: "专题报告", hint: "可自定义关注点" },
-];
-
-const readScopes: Array<{ id: DatabaseScope; label: string }> = [
-  { id: "projects", label: "项目" },
-  { id: "artifacts", label: "资产" },
-  { id: "trace_links", label: "追踪关系" },
-  { id: "reports", label: "报告" },
-  { id: "audit_events", label: "审计事件" },
-];
-
-const writeOperations: Array<{ id: WriteOperation; label: string }> = [
-  { id: "add_project", label: "新增项目" },
-  { id: "add_artifact", label: "新增资产" },
-  { id: "add_trace_link", label: "新增追踪关系" },
-  { id: "append_chat", label: "追加对话" },
-  { id: "save_report", label: "保存报告" },
-  { id: "log_event", label: "记录事件" },
 ];
 
 const qualityModes = [
@@ -93,7 +85,7 @@ function defaultWritePayload(operation: WriteOperation, projectId: string): stri
       name: "requirements.md",
       path: "docs/requirements.md",
       version: "v1.0",
-      content: "系统应支持质量分析、报告生成和数据库读写。",
+      content: "系统应支持质量分析、报告生成和全生命周期资料追踪。",
       meta: { source: "lifecycle" },
     },
     add_trace_link: {
@@ -130,7 +122,7 @@ function defaultWritePayload(operation: WriteOperation, projectId: string): stri
 function App() {
   const route = useHashRoute();
   const activeView: ViewId = route[0] === "projects" ? "quality" : route[0] === "models" ? "models"
-    : ["report", "requirements", "database"].includes(route[0]) ? route[0] as ViewId : "chat";
+    : ["report", "requirements"].includes(route[0]) ? route[0] as ViewId : "chat";
   const qualityVisible = activeView === "quality" || activeView === "models";
   const lastProjectPath = useRef("/projects");
   const lastQualityRoute = useRef<string[]>(["projects"]);
@@ -854,41 +846,14 @@ function App() {
           ))}
         </nav>
 
-        <section className="surface sidebar-block" hidden={qualityVisible}>
-          <span className="eyebrow">项目</span>
-          <div className="project-list">
-            {projects.map((project) => (
-              <button
-                key={project.id}
-                className={`project-item ${selectedProjectId === project.id ? "active" : ""}`}
-                onClick={() => setSelectedProjectId(project.id)}
-                type="button"
-              >
-                <strong>{project.name}</strong>
-                <small>
-                  {project.status} · {project.artifact_count} assets
-                </small>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="surface sidebar-block" hidden={qualityVisible}>
-          <div className="side-header">
-            <ShieldCheck size={16} />
-            <span>连接状态</span>
-          </div>
-          <strong>{selectedProject?.name ?? "未选择项目"}</strong>
-          <p>{selectedProject?.description ?? "等待项目加载"}</p>
-        </section>
       </aside>
 
       <main className="workspace">
         <header className="topbar">
           <div>
             <span className="eyebrow">Software Quality Agent</span>
-            <h2>{qualityVisible ? activeView === "models" ? "模型配置" : "项目资料库" : selectedProject?.name ?? "质量工作台"}</h2>
-            <p className="lead">{qualityVisible ? "软件资料、追踪检测与一致性分析" : selectedProject?.description ?? "请选择一个项目开始分析"}</p>
+            <h2>{qualityVisible ? activeView === "models" ? "模型配置" : "项目资料库" : activeView === "chat" ? "质量问答" : activeView === "report" ? "报告生成" : "需求拆分"}</h2>
+            <p className="lead">{qualityVisible ? "软件资料、追踪检测与一致性分析" : "面向软件生命周期的质量分析工作台"}</p>
           </div>
           <div className="status-strip" hidden={qualityVisible}>
             <span className="status-pill">
@@ -912,7 +877,6 @@ function App() {
         {activeView === "chat" ? renderChatView() : null}
         {activeView === "report" ? renderReportView() : null}
         {activeView === "requirements" ? renderRequirementsView() : null}
-        {activeView === "database" ? renderDatabaseView() : null}
       </main>
 
       {toast ? <div className="toast">{toast}</div> : null}

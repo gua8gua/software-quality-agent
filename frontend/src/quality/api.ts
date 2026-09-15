@@ -3,6 +3,7 @@ export interface Project { id: string; tenant_id: string; name: string; descript
 export interface Dataset { id: string; version: string; created_at: string; provenance: Record<string, unknown>; digest: string }
 export interface ArtifactStructure { original_id?: string; original_type?: string; title?: string; layer?: string; source_file?: string; path?: string; content_status?: string; parent_ids?: string[]; tree_paths?: string[][]; relations?: { target_id: string; relation: string; source_relation_type?: string }[]; [key: string]: unknown }
 export interface Artifact { id: string; dataset_id?: string; external_id: string; kind: string; revision: string; locator: string; sha256: string; original_file_id: string | null; characters?: number; content?: string; structure?: ArtifactStructure }
+export interface ArtifactContent { available: boolean; status: "INLINE" | "LOCAL_FILE" | "REFERENCE_ONLY" | "MISSING_FILE" | "UNAVAILABLE"; content: string | null; reason: string | null }
 export interface Run {
   id: string; project_id: string; dataset_id: string; status: string; stage: string; created_at: string;
   finished_at: string | null; counts: Record<string, number>; error: string | null;
@@ -52,6 +53,7 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   return body.data as T;
 }
 export const get = <T,>(path: string, tenant: string, project?: string) => request<T>(url(path, tenant, project));
+export const getArtifactContent = (id: string, tenant: string, project: string) => get<ArtifactContent>(`/artifacts/${encodeURIComponent(id)}/content`, tenant, project);
 export const post = <T,>(path: string, tenant: string, project: string | undefined, body?: unknown) => request<T>(url(path, tenant, project), { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
 export const modelUrl = (path: string, tenant: string) => `${apiRoot}/model-config${path}?${new URLSearchParams({ tenant_id: tenant })}`;
 export const getModelConfig = (tenant: string) => request<ModelConfig>(modelUrl("", tenant));
