@@ -36,6 +36,8 @@
 - `POST /api/chat`
 - `GET /api/reports?project_id=...`
 - `POST /api/reports/generate`
+- `POST /api/requirements/extract`
+- `POST /api/requirements/coverage`
 - `GET /api/database/schema`
 - `POST /api/database/read`
 - `POST /api/database/write`
