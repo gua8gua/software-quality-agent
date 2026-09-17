@@ -25,6 +25,17 @@ QUALITY_BACKEND_URL=http://127.0.0.1:8000
 
 ## 开发启动
 
+- `GET /api/health`
+- `GET /api/projects`
+- `GET /api/chat/history?project_id=...`
+- `POST /api/chat`
+- `GET /api/reports?project_id=...`
+- `POST /api/reports/generate`
+- `POST /api/requirements/extract`
+- `POST /api/requirements/coverage`
+- `GET /api/database/schema`
+- `POST /api/database/read`
+- `POST /api/database/write`
 先按照 [质量后端启动说明](../software-quality-management-backend/README.md) 启动 8000 端口服务。
 
 在 Agent 项目根目录的第一个终端执行：

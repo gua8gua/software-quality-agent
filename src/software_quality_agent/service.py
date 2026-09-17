@@ -14,6 +14,7 @@ from .agents import (
     OpenAICompatibleLLMClient,
     OrchestratorAgent,
     ReportAgent,
+    RequirementCoverageAgent,
     RequirementDecompositionAgent,
     VerifierAgent,
 )
@@ -29,6 +30,8 @@ from .schemas import (
     ReportRequest,
     ReportResponse,
     RequirementExtractionResponse,
+    RequirementCoverageRequest,
+    RequirementCoverageResponse,
     SchemaResponse,
 )
 from .store import QualityStore, ReportRun
@@ -47,6 +50,7 @@ class QualityAgentService:
             evidence_agent=EvidenceAgent(self.store),
             verifier_agent=VerifierAgent(),
             requirement_agent=RequirementDecompositionAgent(self.llm),
+            coverage_agent=RequirementCoverageAgent(self.llm),
         )
 
     def _build_llm(self) -> LLMClient:
@@ -126,6 +130,11 @@ class QualityAgentService:
             page_count=len(reader.pages),
             page_text=page_text,
         )
+
+    async def analyze_requirement_coverage(
+        self, request: RequirementCoverageRequest
+    ) -> RequirementCoverageResponse:
+        return await self.orchestrator.handle_requirement_coverage(request)
 
     async def _require_project(self, project_id: str):
         project = await self.store.get_project(project_id)
