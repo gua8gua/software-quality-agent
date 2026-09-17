@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "checked_on": "2026-09-05",
+  "policy": "Only official metadata/links are stored for copyrighted ISO/IEEE publications. Public NASA/NIST documents are stored locally.",
+  "standards": [
+    {
+      "id": "ISO-IEC-IEEE-29148-2018",
+      "title": "Systems and software engineering — Life cycle processes — Requirements engineering",
+      "status": "published; current edition while Edition 3 DIS is under development",
+      "official_url": "https://www.iso.org/standard/72089.html",
+      "next_draft_url": "https://www.iso.org/standard/94091.html",
+      "content_status": "metadata_only_copyrighted",
+      "kb_use": ["requirement quality", "requirements process", "traceability"]
+    },
+    {
+      "id": "ISO-IEC-25010-2023",
+      "title": "Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model",
+      "status": "published; Edition 2",
+      "official_url": "https://www.iso.org/standard/78176.html",
+      "content_status": "metadata_only_copyrighted",
+      "kb_use": ["product quality taxonomy", "quality requirements", "quality evaluation"]
+    },
+    {
+      "id": "IEEE-1016-2009",
+      "title": "IEEE Standard for Information Technology—Systems Design—Software Design Descriptions",
+      "status": "inactive-reserved since 2020-03-05",
+      "official_url": "https://standards.ieee.org/ieee/1016/4502/",
+      "content_status": "metadata_only_copyrighted",
+      "kb_use": ["software design description content and organization"]
+    },
+    {
+      "id": "ISO-IEC-IEEE-29119-1-2022",
+      "title": "Software and systems engineering — Software testing — Part 1: General concepts",
+      "status": "published; part of the 29119 series",
+      "official_url": "https://www.iso.org/obp/ui#iso:std:iso-iec-ieee:29119:-1:ed-2:v1:en",
+      "content_status": "metadata_only_copyrighted",
+      "kb_use": ["testing concepts", "risk-based testing", "test process taxonomy"]
+    },
+    {
+      "id": "ISO-IEC-IEEE-12207-2026",
+      "title": "Systems and software engineering — Software life cycle processes",
+      "status": "published; Edition 2; supersedes 12207:2017",
+      "official_url": "https://www.iso.org/standard/90219.html",
+      "content_status": "metadata_only_copyrighted",
+      "kb_use": ["software life-cycle processes", "artifact/process classification"]
+    },
+    {
+      "id": "NIST-SP-800-218",
+      "title": "Secure Software Development Framework (SSDF) Version 1.1",
+      "status": "final",
+      "official_url": "https://csrc.nist.gov/pubs/sp/800/218/final",
+      "content_status": "local_official_publication",
+      "local_path": "nist-ssdf-1.1/NIST.SP.800-218.pdf",
+      "kb_use": ["secure development practices", "tasks", "implementation examples"]
+    },
+    {
+      "id": "NASA-NPR-7150.2D",
+      "title": "NASA Software Engineering Requirements",
+      "status": "effective 2022-03-08 through 2027-03-08",
+      "official_url": "https://nodis3.gsfc.nasa.gov/displayDir.cfm?t=NPR&c=7150&s=2D",
+      "content_status": "local_official_publication",
+      "local_path": "nasa-npr-7150.2d/N_PR_7150_002D.pdf",
+      "kb_use": ["software engineering requirements", "assurance", "life-cycle controls"]
+    },
+    {
+      "id": "NASA-STD-8739.8B",
+      "title": "Software Assurance and Software Safety Standard",
+      "status": "Revision B",
+      "official_url": "https://standards.nasa.gov/standard/NASA/NASA-STD-87398",
+      "content_status": "local_official_publication",
+      "local_path": "nasa-std-8739.8b/NASA-STD-8739.8B.pdf",
+      "kb_use": ["software assurance", "software safety", "verification evidence"]
+    }
+  ]
+}

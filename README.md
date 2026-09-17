@@ -1,34 +1,29 @@
-# Software Quality Agent
+﻿# Software Quality Agent 启动说明
 
-面向“通用软件质量管理系统开发”的多 Agent 后端原型，当前重点支持生命周期文档和代码资产的管理、质量问答、项目报告生成、数据库读写，以及大型项目 PDF 的分块式需求抽取。
+## 安装依赖
 
-## 参考基线
+使用 Python 3.11 或 3.12、Node.js 22.12+。在项目根目录执行：
 
-- [DocAgent](https://github.com/facebookresearch/DocAgent)：借鉴 `Reader / Searcher / Writer / Verifier / Orchestrator` 的分工方式。
-- [RepoAgent](https://github.com/OpenBMB/RepoAgent)：借鉴仓库级结构化文档、Git 变更感知、代码结构分析和持续更新思路。
-- [OpenHands Software Agent SDK](https://github.com/OpenHands/software-agent-sdk)：借鉴 `Agent / Tool / Conversation / Workspace` 的组合式 Agent 架构。
-- [Open WebUI](https://github.com/open-webui/open-webui)、[LibreChat](https://github.com/danny-avila/LibreChat)、[AnythingLLM](https://github.com/Mintplex-Labs/anything-llm)：借鉴左侧导航、主工作区、多会话和管理控制台式 UI。
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e .
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+npm --prefix frontend ci
+```
 
-## 技术栈
+编辑项目根目录 `.env`：
 
-- Python 3.11+
-- FastAPI
-- SQLAlchemy Async ORM
-- SQLite + aiosqlite，后续可切 PostgreSQL
-- OpenAI-compatible chat API，可用 OpenAI、DeepSeek、本地或私有模型服务；必须配置 LLM，不再提供 mock 模式
+```dotenv
+DATABASE_URL=sqlite+aiosqlite:///./data/software_quality_agent.sqlite
+LLM_PROVIDER=openai_compatible
+LLM_BASE_URL=https://你的模型服务/v1
+LLM_API_KEY=你的密钥
+LLM_MODEL=你的模型名称
+LLM_TIMEOUT_SECONDS=60
+QUALITY_BACKEND_URL=http://127.0.0.1:8000
+```
 
-## 多 Agent 划分
-
-- `OrchestratorAgent`：任务路由、上下文汇总、调用子 Agent。
-- `EvidenceAgent`：收集项目、文档、代码、测试、trace link 和报告证据，识别缺口。
-- `ConversationAgent`：项目质量问答、追踪关系解释、下一步建议。
-- `ReportAgent`：生成项目质量总览、需求追踪、覆盖分析和专题报告。
-- `DatabaseReadAgent`：受控读取项目库、资产库、追踪关系、报告和审计事件。
-- `DatabaseWriteAgent`：受控写入项目、资产、trace link、对话、报告和审计事件。
-- `VerifierAgent`：校验报告结构、风险提示和证据完整性。
-- `RequirementDecompositionAgent`：本地按段落分批调用 LLM 识别候选需求，再按业务能力合并过细条目，最后由后端去重、编号并执行 Pydantic 校验。
-
-## 接口
+## 开发启动
 
 - `GET /api/health`
 - `GET /api/projects`
@@ -41,40 +36,35 @@
 - `GET /api/database/schema`
 - `POST /api/database/read`
 - `POST /api/database/write`
+先按照 [质量后端启动说明](../software-quality-management-backend/README.md) 启动 8000 端口服务。
 
-## 本地运行
-
-```powershell
-python -m pip install -e .
-software-quality-agent serve --host 127.0.0.1 --port 8010
-```
-
-或者：
+在 Agent 项目根目录的第一个终端执行：
 
 ```powershell
-python -m uvicorn software_quality_agent.server:app --host 127.0.0.1 --port 8010 --reload
+.\.venv\Scripts\python.exe -m software_quality_agent.cli serve --host 127.0.0.1 --port 8010
 ```
 
-默认数据库：`data/software_quality_agent.sqlite`。首次启动会写入一个演示项目，用于前端联调。
+在同一目录的第二个终端执行：
 
-启动前必须在 `.env` 中配置真实的 OpenAI-compatible LLM：
-
-```env
-LLM_PROVIDER=openai_compatible
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_API_KEY=your-api-key
-LLM_MODEL=gpt-4o-mini
+```powershell
+$env:QUALITY_BACKEND_URL = "http://127.0.0.1:8000"
+$env:AGENT_BACKEND_URL = "http://127.0.0.1:8010"
+npm --prefix frontend run dev
 ```
 
-未配置完整时，服务启动会直接报错，不会使用规则或 mock 结果替代 LLM。
+打开 `http://localhost:5173`。项目资料库为 `http://localhost:5173/#/projects`，模型配置为 `http://localhost:5173/#/models`。
 
-## 环境变量
+## 构建与启动
 
-复制 `.env.example` 为 `.env` 后可配置：
+```powershell
+npm --prefix frontend run build
+.\.venv\Scripts\python.exe -m software_quality_agent.cli serve --host 0.0.0.0 --port 8010
+```
 
-- `DATABASE_URL`
-- `LLM_PROVIDER`
-- `LLM_BASE_URL`
-- `LLM_API_KEY`
-- `LLM_MODEL`
-- `API_CORS_ORIGINS`
+保持质量后端在 `.env` 的 `QUALITY_BACKEND_URL` 地址运行。打开 `http://localhost:8010`；其他设备使用服务器 IP 和 8010 端口访问。
+
+Agent 接口文档：`http://localhost:8010/docs`。健康检查：`http://localhost:8010/api/health`。
+
+## 停止
+
+在服务终端按 `Ctrl+C`。

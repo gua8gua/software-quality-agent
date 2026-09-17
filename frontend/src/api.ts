@@ -17,7 +17,7 @@ import type {
   WriteOperation,
 } from "./types";
 
-const defaultBaseUrl = import.meta.env.VITE_AGENT_API_BASE || "http://127.0.0.1:8010";
+const defaultBaseUrl = import.meta.env.VITE_AGENT_API_BASE || "";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${defaultBaseUrl}${path}`, {
@@ -120,7 +120,7 @@ export async function readDatabase(payload: {
           : payload.scope === "audit_events"
             ? [{ operation: "seed_demo_data", created_at: new Date().toISOString() }]
             : [{ scope: payload.scope, keyword: payload.keyword || "" }];
-    return { scope: payload.scope, rows, total: rows.length };
+    return { scope: payload.scope, rows: rows.map(row => ({ ...row })), total: rows.length };
   }
 }
 

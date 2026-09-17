@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = Field(default=60.0, gt=0)
 
     default_project_id: str = ""
+    quality_backend_url: str = "http://127.0.0.1:8000"
     api_cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     @property

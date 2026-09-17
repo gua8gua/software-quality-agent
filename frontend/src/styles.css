@@ -819,3 +819,12 @@ select:focus {
     align-items: stretch;
   }
 }
+
+[hidden] { display: none !important; }
+.quality-panel { min-width: 0; }
+.quality-context { margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.quality-content { display: grid; gap: 16px; }
+.quality-panel input[type="checkbox"], .quality-panel input[type="radio"] { width: auto; }
+.quality-panel .surface { min-width: 0; }
+.quality-panel .panel-header { flex-wrap: wrap; }
+

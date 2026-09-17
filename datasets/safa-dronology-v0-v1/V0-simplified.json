@@ -1,0 +1,2964 @@
+{
+  "trees": {
+    "UAV-1008": {
+      "root-node": {
+        "id": "UAV-1008",
+        "description": "",
+        "name": "UAVs collide with each other during landing",
+        "status": "Defined",
+        "children": {},
+        "is-delegated": false
+      }
+    },
+    "UAV-1009": {
+      "root-node": {
+        "id": "UAV-1009",
+        "description": "",
+        "name": "Midair collision during flight execution",
+        "status": "Defined",
+        "children": {
+          "Requirement": [
+            {
+              "DATA": {
+                "id": "UAV-1123",
+                "description": "When a route is run in the simulator and _MINIMUM_SEPARATION_DISTANCE_ is violated an error shall be reported in the simulator log. ",
+                "name": "When a route is run in the simulator and MINIMUM_SEPARATION_DISTANCE is violated an error shall be reported in the simulator log. ",
+                "status": "Open",
+                "children": {},
+                "is-delegated": true
+              }
+            },
+            {
+              "DATA": {
+                "id": "UAV-1037",
+                "description": "All routes are carefully planned and tested in the simulator and any violation of the _MINIMUM_SEPARATION_DISTANCE_ shall be reported in the simulator log. ",
+                "name": "All routes are carefully planned and tested in the simulator prior to flights to check for violations of minimum separation distance.",
+                "status": "Open",
+                "children": {},
+                "is-delegated": true
+              }
+            }
+          ],
+          "ProcessRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-1122",
+                "description": "All routes are carefully planned and tested in the simulator by the Dronology operator prior to physical flights to ensure minimum separation of UAVs by at least 8 meters vertical or horizontal distance at all times.",
+                "name": "All routes are planned to ensure minimum separation of UAVs in flight at all times.",
+                "status": "Open",
+                "children": {
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1038",
+                        "description": "The fidelity of the simulator is sufficient such that collision free routes set at a minimum of 8 meters separation in the simulation will also be collision free in the physical worls.",
+                        "name": "Routes that are free of collisions with simulated UAVs will also be free of collisions with physical UAVs.",
+                        "status": "Defined",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "AcceptanceTest": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1121",
+                        "description": "Preconditions:\r\nFlight route is created\r\nPhysical UAV is armed and ready to fly\r\nSimulator is armed and ready to fly\r\n\r\nSteps:\r\n1.  The route is assigned to the physical UAV.\r\n2.  The Physical UAV flies the route.\r\n3.  Flight coordinates and waypoints are logged every 2 seconds with time stamps.\r\n4.  The Physical UAV completes the route.\r\n5.  Steps 1-4 are repeated for the simulated UAV.\r\n6.  Logs are compared to check that physical and simulated drones flight paths were within 1 meter of each other at all time stamps.\r\n\r\nPostcondition:\r\nCoordinates at any relative timestamp were within 1 meter.",
+                        "name": "Flights that are tested in the simulator without collision are safe with Physical Drones",
+                        "status": "Defined",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-1006": {
+      "root-node": {
+        "id": "UAV-1006",
+        "description": "UAV receives a waypoint command that causes it to fly into terrain",
+        "name": "UAV receives a goto directive that causes it to fly into terrain",
+        "status": "Defined",
+        "children": {
+          "EnvironmentalAssumption": [
+            {
+              "DATA": {
+                "id": "UAV-912",
+                "description": "The UAV may not fly beyond line of sight (BLOS) of the operator enabling an operator to constantly observe the UAVs behavior and to respond accordingly. ",
+                "name": "UAV is operated under FAA Line of Sight regulations",
+                "status": "Defined",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-1066",
+                "description": "All waypoint directives issued by Dronology to a UAV will represent valid coordinates that will not cause the UAV to fly into the terrain.",
+                "name": "Waypoint commands sent to the UAV will represent valid coordinates that will not cause collisions with the terrain.",
+                "status": "Open",
+                "children": {
+                  "Context": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1109",
+                        "description": "",
+                        "name": "All directives in Dronology are issued via waypoint commands.",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1073",
+                        "description": "Flight routes imported using the mission planner interface are constructed using the Dronology UI.",
+                        "name": "All flight routes imported using the mission planner interface are constructed using the Dronology UI.",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "id": "UAV-1074",
+                        "description": "Waypoints that are dynamically generated by dronology are assigned altitudes above ground level.",
+                        "name": "All dynamically generated waypoints are validated to be above ground level",
+                        "status": "Open",
+                        "children": {
+                          "DesignDefinition": [
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-1067",
+                                "description": "Waypoints are created in the Dronology UI where their altitude is checked to determine that it is greater than zero.",
+                                "name": "Waypoints generated via the Dronology UI are validated to check that their altitude is greater than zero.",
+                                "status": "Open",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-1067\\nui.vaadin.flightroutes.mapoperations",
+                                        "name": "UAV-1067\\nedu.nd.dronology.ui.vaadin.flightroutes.mapoperations",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "84559176-c225-4124-a039-1112eb0dd4e9",
+                                                "name": "UAV-1067edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/flightroutes/mapoperations/MapAddMarkerListener.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-1067\\nui.vaadin.flightroutes",
+                                        "name": "UAV-1067\\nedu.nd.dronology.ui.vaadin.flightroutes",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "cad5ccc9-6495-4f3c-a014-8d150cdb381b",
+                                                "name": "UAV-1067edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/flightroutes/FRTableDisplay.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-448",
+                                "description": "When in COORDINATED_TAKEOFF mode and commanded to takeoff, each UAV in the group will ascend to a unique takeoff altitude such that there is a minimum distance of 4 meters between each pair of specified altitudes.",
+                                "name": "Each UAV ascends to a unique altitude during coordinated take off ascent",
+                                "status": "Open",
+                                "children": {
+                                  "EnvironmentalAssumption": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-893",
+                                        "description": "RTK positioning is active",
+                                        "name": "RTK is active",
+                                        "status": "Defined",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-923",
+                                        "description": "RTK provides positioning accuracy to within 10cm.",
+                                        "name": "RTK is accurate to 10 cm",
+                                        "status": "Defined",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ],
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-448\\nservices.missionplanning.patterns",
+                                        "name": "UAV-448\\nedu.nd.dronology.services.missionplanning.patterns",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "127589f6-2bb8-4887-8b3d-54c5bac7da93",
+                                                "name": "UAV-448edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedTakeoffPattern.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-448\\nservices.missionplanning.tasks",
+                                        "name": "UAV-448\\nedu.nd.dronology.services.missionplanning.tasks",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "36164440-9691-4651-9d45-01d6c39d8bfa",
+                                                "name": "UAV-448edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/tasks/TaskFactory.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-450",
+                                "description": "When in COORDINATED_TAKEOFF mode and all UAVs have reached their target altitudes, each UAV shall fly in a direct path to the longitude and latitude of its first waypoint while maintaining its current altitude.",
+                                "name": "Fly to first waypoint at assigned altitude during coordinated takeoff",
+                                "status": "Open",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-450\\nservices.missionplanning.tasks",
+                                        "name": "UAV-450\\nedu.nd.dronology.services.missionplanning.tasks",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "6478f74a-bc54-419a-94f6-8edff3f70d95",
+                                                "name": "UAV-450edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/tasks/TaskFactory.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-450\\nservices.missionplanning.patterns",
+                                        "name": "UAV-450\\nedu.nd.dronology.services.missionplanning.patterns",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "b4407f41-95e2-4860-bf40-b46deb122568",
+                                                "name": "UAV-450edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedTakeoffPattern.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-452",
+                                "description": "When in COORDINATED_TAKEOFF mode and all UAVs have reached the targeted longitude and latitude of their first waypoint, they shall all descend to the altitude specified in the flight route for the first waypoint.",
+                                "name": "When reaching the first waypoint, the UAV descends or ascends to the specified altitude duing coordinated takeoff",
+                                "status": "Open",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-452\\nservices.missionplanning.patterns",
+                                        "name": "UAV-452\\nedu.nd.dronology.services.missionplanning.patterns",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "97271808-aa5e-410c-b152-85797c30805d",
+                                                "name": "UAV-452edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedLandingPattern.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "e2b59e33-7fe0-4c5c-9ab8-756f6889dbd2",
+                                                "name": "UAV-452edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedTakeoffPattern.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "DesignDefinition": [
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-1068",
+                        "description": "",
+                        "name": "The GCS uses the services of Dronekit Python to transform waypoint requests into Mavlink and to transmit those commands to the UAV pixhawk controller.",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": true
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            },
+            {
+              "DATA": {
+                "id": "UAV-1010",
+                "description": "All waypoints in flight routes assigned to UAV must be at least 3 meters above the highest terrain in the flying zone",
+                "name": "All waypoints in flight routes assigned to UAV must be at least 3 meters above the highest terrain in the flying zone.",
+                "status": "Open",
+                "children": {
+                  "Context": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1065",
+                        "description": "Currently, UAVs are not equipped with ground facing sensors and are therefore not able to detect changes in terrain altitude.",
+                        "name": "UAVs are not equipped with ground facing sensors",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "ProcessRequirement": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1063",
+                        "description": "When the flying area includes hilly terrain, the operator inspects all assigned flight routes to ensure that waypoints are above the highest terrain level.",
+                        "name": "Operator only assigns flight routes with waypoints above terrain level",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "DesignDefinition": [
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-1064",
+                        "description": "Altitude commands use relative altitude which is defined relative to the onground coordinates of the UAV prior to takeoff.",
+                        "name": "Altitude commands use relative altitude which is defined relative to the onground coordinates of the UAV prior to takeoff.",
+                        "status": "Open",
+                        "children": {
+                          "Context": [
+                            {
+                              "DATA": {
+                                "id": "UAV-1099",
+                                "description": "",
+                                "name": "Use of global altitude requires additional instrumentation in order to achieve required degrees of accuracy.",
+                                "status": "Open",
+                                "children": {},
+                                "is-delegated": false
+                              }
+                            }
+                          ],
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-1064\\ncore.coordinate",
+                                "name": "UAV-1064\\nedu.nd.dronology.core.coordinate",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "d6bfc645-9059-44c6-b393-9e0481f5cabb",
+                                        "name": "UAV-1064edu.nd.dronology.core/src/edu/nd/dronology/core/coordinate/AbstractPosition.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-1064\\ncore.vehicle.internal",
+                                "name": "UAV-1064\\nedu.nd.dronology.core.vehicle.internal",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "eec1ad8f-9d60-4a5a-b5ae-f19b93c413dc",
+                                        "name": "UAV-1064edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/internal/PhysicalDrone.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-1018": {
+      "root-node": {
+        "id": "UAV-1018",
+        "description": "",
+        "name": "Satellite signals are lost causing the UAV to lose accurate localization and fly in seemingly random directions to achieve its target waypoint.",
+        "status": "Defined",
+        "children": {
+          "EnvironmentalAssumption": [
+            {
+              "DATA": {
+                "id": "UAV-912",
+                "description": "The UAV may not fly beyond line of sight (BLOS) of the operator enabling an operator to constantly observe the UAVs behavior and to respond accordingly. ",
+                "name": "UAV is operated under FAA Line of Sight regulations",
+                "status": "Defined",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "ProcessRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-982",
+                "description": "When the RPIC determines that Dronology has lost control of the UAV for more than _acceptable loss of communication_ minutes, then the RPIC shall take control. ",
+                "name": "RPIC will takeover control with the hand-held GCS when deemed necessary",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-1007": {
+      "root-node": {
+        "id": "UAV-1007",
+        "description": "",
+        "name": "UAV flies into a fixed stationary object such as a building or tree",
+        "status": "Defined",
+        "children": {
+          "EnvironmentalAssumption": [
+            {
+              "DATA": {
+                "id": "UAV-912",
+                "description": "The UAV may not fly beyond line of sight (BLOS) of the operator enabling an operator to constantly observe the UAVs behavior and to respond accordingly. ",
+                "name": "UAV is operated under FAA Line of Sight regulations",
+                "status": "Defined",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "ProcessRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-966",
+                "description": "Avoid all fixed obstacles such as trees on the bank, bridges etc when planning routes.  Check all routes on the simulator prior to flight.",
+                "name": "Carefully plan routes to avoid known obstacles",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-1031": {
+      "root-node": {
+        "id": "UAV-1031",
+        "description": "An untrusted UAV registers with Dronology, fails to comply with commands, and creates chaos in the airspace. \u003cProbability\u003eProbability of hazard occurring is negligible given current flying locations.\u003c/Probability\u003e",
+        "name": "An untrusted UAV registers with Dronology, fails to comply with commands, and creates chaos in the airspace.",
+        "status": "Defined",
+        "children": {
+          "Context": [
+            {
+              "DATA": {
+                "id": "UAV-1042",
+                "description": "When used in public settings, Dronology is activated for limited periods of time to support specific events such as River Rescues, significantly decreasing the opportunity for rogue UAVs to attempt to register.",
+                "name": "Public use of Dronology is limited to specific events, limiting the opportunity for rogue UAVs to activate in the system.",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-1032",
+                "description": "Dronology provides features to allow a human operator to monitor active flights.",
+                "name": "When Dronology service is active it shall be monitored by a human operator.",
+                "status": "Open",
+                "children": {
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-120",
+                        "description": "The _RealTimeFlightUI_ shall display the location and status of active UAVs.",
+                        "name": "Real-Time Flight UI display status of all active UAVs",
+                        "status": "Reopened",
+                        "children": {
+                          "DesignDefinition": [
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-688",
+                                "description": "The UI shall periodically request current locations of all registered UAVs from the _UIMiddleware_ and update their locations on the map.",
+                                "name": "Periodically update UAV location",
+                                "status": "Closed",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-688\\nui.vaadin.start",
+                                        "name": "UAV-688\\nedu.nd.dronology.ui.vaadin.start",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "d5e9361d-9123-4216-8dcc-4bc19901f66b",
+                                                "name": "UAV-688edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "2debe32d-5727-4318-93b9-bf93175ba00a",
+                                                "name": "UAV-688edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-688\\nui.vaadin.activeflights",
+                                        "name": "UAV-688\\nedu.nd.dronology.ui.vaadin.activeflights",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "a8e10ec3-a4d1-49bd-bed2-3374142cc9db",
+                                                "name": "UAV-688edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/MapDrawingUtil.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "dd717278-f85e-466e-bf34-bb2b89707f84",
+                                                "name": "UAV-688edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-687",
+                                "description": "For each activated UAV, the UI shall display information about that UAV (i.e. longitude, latitude, altitude, groud speed, battery level, etc.) ",
+                                "name": "Display UAV information and operations",
+                                "status": "Closed",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-687\\nui.vaadin.activeflights",
+                                        "name": "UAV-687\\nedu.nd.dronology.ui.vaadin.activeflights",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "43dffe25-f1a0-4a01-94a9-aacb9689db2d",
+                                                "name": "UAV-687edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFInfoBox.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "50c0bc30-bc32-498e-ba57-51c9dd69d518",
+                                                "name": "UAV-687edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFInfoBox.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [
+                                  "UAV-182",
+                                  "UAV-232"
+                                ],
+                                "id": "UAV-121",
+                                "description": "The UAV location shall be updated on the map at the currently defined {{UI_UAV_REFRESH_RATE}}",
+                                "name": "Update UAV location frequency",
+                                "status": "Closed",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-121\\nui.vaadin.utils",
+                                        "name": "UAV-121\\nedu.nd.dronology.ui.vaadin.utils",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "87a41534-3148-47a7-ab58-6bd8bd17780b",
+                                                "name": "UAV-121edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/utils/Configuration.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-121\\nui.vaadin.start",
+                                        "name": "UAV-121\\nedu.nd.dronology.ui.vaadin.start",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "469ed73a-589e-4b45-93fc-cb0d90d1a41f",
+                                                "name": "UAV-121edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "003f14bf-a2ec-46c7-ade8-f0a9be547fc8",
+                                                "name": "UAV-121edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "dfab7261-c824-46c9-a152-5779d20c94fe",
+                                                "name": "UAV-121edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "2b450fb5-35ce-4922-bd7e-3f61073d11aa",
+                                                "name": "UAV-121edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-121\\nui.vaadin.activeflights",
+                                        "name": "UAV-121\\nedu.nd.dronology.ui.vaadin.activeflights",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "def8706f-34a5-4d04-b3d6-eb98876dca8f",
+                                                "name": "UAV-121edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "42adf66e-c1af-4e24-906c-ff5b41559eeb",
+                                                "name": "UAV-121edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMainLayout.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "c725af39-88ab-4479-a025-5500e3829d96",
+                                                "name": "UAV-121edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-686",
+                                "description": "Different types of UAVs shall have different icons.",
+                                "name": "Differentiate UAV types",
+                                "status": "Open",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-686\\nui.vaadin.activeflights",
+                                        "name": "UAV-686\\nedu.nd.dronology.ui.vaadin.activeflights",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "fe5686fe-5a21-4dc9-afdd-bedbfef51b47",
+                                                "name": "UAV-686edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFInfoBox.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [
+                                  "UAV-224",
+                                  "UAV-304",
+                                  "UAV-428"
+                                ],
+                                "id": "UAV-685",
+                                "description": "When the map is loaded and the all active UAVs list is obtained the _UIRealTimeFlightView_ shall display an icon on the map for each registered UAV based on its current location.",
+                                "name": "Display UAVs on map",
+                                "status": "Closed",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-685\\nui.vaadin.activeflights",
+                                        "name": "UAV-685\\nedu.nd.dronology.ui.vaadin.activeflights",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "7eea3eb3-5d1b-4d2f-bd5d-334be9d0617a",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMainLayout.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "52b3378c-3e7c-43f0-96e9-8c3813b6d01d",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "c71fd3a4-d366-4cba-a47d-0fa84309a71a",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFInfoPanel.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "5d7afb03-f484-4223-881a-43a43718910d",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "5243d193-9dba-47a1-b749-ed7a1c2e615b",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "75cee601-605e-4795-9df1-a692b6df9996",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "63cdc55a-fc92-45a6-ad9f-29df10ae8aa9",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "0d9fbc4a-f1a3-485b-89a6-3d8ec620b3fa",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFInfoPanel.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "83de2e95-8b87-439d-8c3a-d5b5283dc683",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/MapDrawingUtil.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "b65ce513-5496-40f8-b112-deae1e7251a7",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "7c6550de-8cb9-48c8-9320-e55037fba475",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFMapComponent.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-685\\nui.vaadin.start",
+                                        "name": "UAV-685\\nedu.nd.dronology.ui.vaadin.start",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "e86a985f-87bb-43d2-acb0-8e75479718b4",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "cfc27d35-3149-429b-bb03-8249daf707af",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "9bb626d6-44f4-4559-8867-20c8dca25f9d",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/start/MyUI.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-685\\nservices.instances.flightmanager",
+                                        "name": "UAV-685\\nedu.nd.dronology.services.instances.flightmanager",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "c4c5a019-e47d-440d-8eb7-c482f4b6cb01",
+                                                "name": "UAV-685edu.nd.dronology.services/src/edu/nd/dronology/services/instances/flightmanager/FlightInfoCreator.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-685\\nui.vaadin.flightroutes",
+                                        "name": "UAV-685\\nedu.nd.dronology.ui.vaadin.flightroutes",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "37915527-590d-4f23-b8ab-a7117254ed26",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/flightroutes/FRTableDisplay.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "a5e91d46-7d40-4e19-a9b3-d323350608de",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/flightroutes/FRMainLayout.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-685\\nui.vaadin.utils",
+                                        "name": "UAV-685\\nedu.nd.dronology.ui.vaadin.utils",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "636be01a-e53b-4868-97e7-0d25980ea7b5",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/utils/MapMarkerUtilities.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "ee7739e5-cc63-4708-8333-18992f6bea85",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/utils/MapAddMarkerListener.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "de75e9a4-eb06-4570-b9e3-02ca5a46733a",
+                                                "name": "UAV-685edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/utils/MapMarkerUtilities.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            },
+            {
+              "DATA": {
+                "id": "UAV-1041",
+                "description": "UAVs connect to dronology via a GCS which leverages a well defined handshake protocol with Dronology\u0027s Ground-Station middleware.",
+                "name": "UAVs connect to dronology via a well defined handshake protocol ",
+                "status": "Open",
+                "children": {
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1107",
+                        "description": "",
+                        "name": "Python Based Ground Control Station V1.0 with all control logic on the ground.",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": true
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "id": "UAV-1108",
+                        "description": "",
+                        "name": "Python Based Ground Control Station V1.0 with control logic distributed between ground-based GCS and Processor onboard the UAV.",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": true
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "id": "UAV-1100",
+                        "description": "",
+                        "name": "Ground Station Middleware handles all communication between Dronology and external GCSs.",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": true
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ],
+          "ProcessRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-1034",
+                "description": "",
+                "name": "Dronology operator will manually disable GCS in case of unknown UAV activation",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-1021": {
+      "root-node": {
+        "id": "UAV-1021",
+        "description": "UAV compass is not adequately calibrated and UAV flies in incorrect direction.",
+        "name": "UAV compass calibration error causes UAV to fly in incorrect direction",
+        "status": "Defined",
+        "children": {
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-1061",
+                "description": "The UAV passes all mandatory calibration tests prior to flight including compass, accelerometer. (List more)",
+                "name": "UAV is calibrated prior to flight",
+                "status": "Open",
+                "children": {
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1062",
+                        "description": "UAV is calibrated using Mission Planner or QGroundControl 3rd party software.",
+                        "name": "Mission planner UAV calibration",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": true
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ],
+          "ProcessRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-982",
+                "description": "When the RPIC determines that Dronology has lost control of the UAV for more than _acceptable loss of communication_ minutes, then the RPIC shall take control. ",
+                "name": "RPIC will takeover control with the hand-held GCS when deemed necessary",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-1005": {
+      "root-node": {
+        "id": "UAV-1005",
+        "description": "",
+        "name": "UAV collides with a flying animal (e.g., a goose)",
+        "status": "Defined",
+        "children": {},
+        "is-delegated": false
+      }
+    },
+    "UAV-1013": {
+      "root-node": {
+        "id": "UAV-1013",
+        "description": "Motor fails during flight.",
+        "name": "Motor fails during UAV flight",
+        "status": "Defined",
+        "children": {},
+        "is-delegated": false
+      }
+    },
+    "UAV-1101": {
+      "root-node": {
+        "id": "UAV-1101",
+        "description": "",
+        "name": "UAV flies above the altitude permitted by FAA regulations.",
+        "status": "Defined",
+        "children": {
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-1102",
+                "description": "",
+                "name": "Prior to flying in a controlled airspace, the maximum altitude of each UAV is set through its internal geofence.",
+                "status": "Open",
+                "children": {
+                  "Context": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1103",
+                        "description": "",
+                        "name": "UAVs fly in uncontrolled airspace where the maximum altitude is 400 feet AGL",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1124",
+                        "description": "",
+                        "name": "RPIC checks the geofence to ensure that the maximum altitude is 400 feet above ground level as allowed by FAA regulations.",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-906": {
+      "root-node": {
+        "id": "UAV-906",
+        "description": "Commands sent to the UAV from the GCS are not received",
+        "name": "UAV is no longer controllable from Dronology due to communication loss.",
+        "status": "Defined",
+        "children": {
+          "Context": [
+            {
+              "DATA": {
+                "id": "UAV-910",
+                "description": "The ground control station sends all commands to the UAV via telemetry and receives all status reports via telemetry.",
+                "name": "All communication between GCS and UAVs uses telemetry",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-979",
+                "description": "All UAVs shall have failsafe mechanisms that enable them to independently make basic land-in-place, stop in place,  and RTL decisions in case of emergency.",
+                "name": "All UAVs shall have onboard failsafe mechanisms",
+                "status": "Open",
+                "children": {
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-454",
+                        "description": "If a UAV reaches the boundary of the onboard GeoFence it shall RTL.",
+                        "name": "RTL if UAV reaches onboard GeoFence boundary",
+                        "status": "Open",
+                        "children": {
+                          "DesignDefinition": [
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-981",
+                                "description": "RTL capabilities are built into the PixHawk 1.x and 2.x controller used by all UAVs integrated into Dronology.",
+                                "name": "All UAVs use PixHawk 1.x or 2.x controllers with inbuilt RTL capabilities including programmable RTL triggers and RTL altitudes.",
+                                "status": "Open",
+                                "children": {
+                                  "EnvironmentalAssumption": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-924",
+                                        "description": "The UAV has capabilities to activate RTL upon Geofence breach, and these capabilities have been activated in each UAV.",
+                                        "name": "3rd party RTL at Geofence breach",
+                                        "status": "Defined",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-926",
+                                        "description": "The UAVs RTL feature allows the return altitude for each UAV to be customized and each UAV has been assigned an individual RTL altitude.",
+                                        "name": "3rd party customized RTL altitudes",
+                                        "status": "Defined",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": true
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            },
+            {
+              "DATA": {
+                "id": "UAV-456",
+                "description": "If a UAV has lost connectivity with the GCS and has no currently assigned waypoint, then it shall hover in place until it receives a further command.",
+                "name": "Hover in place if no pending commands and connectivity to GCS is lost",
+                "status": "Open",
+                "children": {
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-80",
+                        "description": "When a flight plan is executed, the _VehicleCore_ shall send the next waypoint to the UAV after the previous waypoint has been reached.",
+                        "name": "Next waypoint sent after previous waypoint reached",
+                        "status": "Closed",
+                        "children": {
+                          "DesignDefinition": [
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-528",
+                                "description": "When the _VehicleCore_ receives the UAV\u0027s current coordinates and if the UAV has an assigned target waypoint, then the _VehicleCore_ shall compute the current distance to the target waypoint.",
+                                "name": "Compute distance to next waypoint",
+                                "status": "Closed",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-528\\ncore.vehicle",
+                                        "name": "UAV-528\\nedu.nd.dronology.core.vehicle",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "40754160-fb00-47ff-b93b-2c99339e3bae",
+                                                "name": "UAV-528edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/ManagedDrone.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-528\\ncore.vehicle.internal",
+                                        "name": "UAV-528\\nedu.nd.dronology.core.vehicle.internal",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "b730e479-8332-46a4-b2e6-2547ab388bf5",
+                                                "name": "UAV-528edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/internal/PhysicalDrone.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "2649e0e3-1846-4ae7-ac89-54ee3c16d1c0",
+                                                "name": "UAV-528edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/internal/VirtualDrone.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-529",
+                                "description": "If the computed distance from the UAV to the target waypoint is less than {{THRESHOLD_WAYPOINT_DISTANCE}} than the waypoint shall be considered reached.",
+                                "name": "Determine if waypoint is reached",
+                                "status": "Closed",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-529\\ncore.vehicle",
+                                        "name": "UAV-529\\nedu.nd.dronology.core.vehicle",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "cb1ee77a-9559-40e9-bcf5-3b455ebad87e",
+                                                "name": "UAV-529edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/ManagedDrone.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-529\\ncore.vehicle.internal",
+                                        "name": "UAV-529\\nedu.nd.dronology.core.vehicle.internal",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "e6b8305b-20bd-4828-892b-0056f5312efa",
+                                                "name": "UAV-529edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/internal/PhysicalDrone.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "87f6265b-4edc-48ec-8fc1-d1936c6ba923",
+                                                "name": "UAV-529edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/internal/VirtualDrone.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-527",
+                                "description": "At the start of a flight plan the system shall send the first target waypoint to the UAV\u0027s _GCS_.",
+                                "name": "Send first waypoint at start of flight plan",
+                                "status": "Closed",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-527\\ncore.flight.internal",
+                                        "name": "UAV-527\\nedu.nd.dronology.core.flight.internal",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "abfce4d5-7d37-4fcc-a745-accbf69fdfd0",
+                                                "name": "UAV-527edu.nd.dronology.core/src/edu/nd/dronology/core/flight/internal/SoloDirector.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-527\\ncore.vehicle",
+                                        "name": "UAV-527\\nedu.nd.dronology.core.vehicle",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "bde066c7-cdac-4f13-9d56-78301ec5dab6",
+                                                "name": "UAV-527edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/ManagedDrone.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-530",
+                                "description": "When the UAV reaches a target waypoint, if additional waypoints are specified in the flight plan, then the _VehicleCore_  shall send the next waypoint to the UAV\u0027s _GCS_.",
+                                "name": "Visiting waypoints during flight plan",
+                                "status": "Closed",
+                                "children": {
+                                  "FormalReview": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-1096",
+                                        "description": "asd",
+                                        "name": "TEST REVIEW",
+                                        "status": "Open",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ],
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-530\\ncore.vehicle.internal",
+                                        "name": "UAV-530\\nedu.nd.dronology.core.vehicle.internal",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "15139227-588a-4c73-9fde-70729b5a7cd2",
+                                                "name": "UAV-530edu.nd.dronology.core/src/edu/nd/dronology/core/vehicle/internal/PhysicalDrone.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "id": "UAV-912",
+                        "description": "The UAV may not fly beyond line of sight (BLOS) of the operator enabling an operator to constantly observe the UAVs behavior and to respond accordingly. ",
+                        "name": "UAV is operated under FAA Line of Sight regulations",
+                        "status": "Defined",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "id": "UAV-922",
+                        "description": "UAVs under the control of Dronology only receive commands from the Dronology GCS and the official handheld controllers",
+                        "name": "No unauthorized commands are received",
+                        "status": "Defined",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "id": "UAV-928",
+                        "description": "There will be one human RPIC assigned to each UAV during its flight",
+                        "name": "One RPIC per UAV in flight",
+                        "status": "Defined",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ],
+          "ProcessRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-982",
+                "description": "When the RPIC determines that Dronology has lost control of the UAV for more than _acceptable loss of communication_ minutes, then the RPIC shall take control. ",
+                "name": "RPIC will takeover control with the hand-held GCS when deemed necessary",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-947": {
+      "root-node": {
+        "id": "UAV-947",
+        "description": "",
+        "name": "Battery fails during flight",
+        "status": "Defined",
+        "children": {
+          "Context": [
+            {
+              "DATA": {
+                "id": "UAV-956",
+                "description": "Landing in place when flying over water is not acceptable",
+                "name": "Dronology applications include flights over water",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "EnvironmentalAssumption": [
+            {
+              "DATA": {
+                "id": "UAV-955",
+                "description": "Most UAVs are preprogrammed by their manufacturers to land-in-place when voltage falls below a certain threshold.",
+                "name": "Default behavior for depleted voltage is land-in-place",
+                "status": "Defined",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-698",
+                "description": "The _RealTimeFlightUI_ shall notify users when an emergency occurs.",
+                "name": "Emergency Notification",
+                "status": "Open",
+                "children": {
+                  "DesignDefinition": [
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-699",
+                        "description": "When the UAV\u0027s battery level drops below a predefined threshold, then the UAV health indicator is activated.",
+                        "name": "Emergency Battery Notification when threshold is reached",
+                        "status": "Open",
+                        "children": {
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-699\\ngstation.connector.messages",
+                                "name": "UAV-699\\nedu.nd.dronology.gstation.connector.messages",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 1530637938000,
+                                        "commitstatus": "#manual-tagged",
+                                        "filestatus": "modified",
+                                        "committer": "JaneClelandHuang",
+                                        "commitid": "3654e42807d900368d7c6ea4578fbc87e662f59f",
+                                        "id": "edu.nd.dronology.gstation.python.connector/src/edu/nd/dronology/gstation/connector/messages/UAVStateMessage.java",
+                                        "name": "edu.nd.dronology.gstation.python.connector/src/edu/nd/dronology/gstation/connector/messages/UAVStateMessage.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "b2c276e9-65b4-4043-9803-ae4153a14a86",
+                                        "name": "UAV-699edu.nd.dronology.gstation.python.connector/src/edu/nd/dronology/gstation/connector/messages/StateMessageTypeAdapter.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            },
+            {
+              "DATA": {
+                "id": "UAV-984",
+                "description": "The UI shall display the available battery percentage for each UAV in flight.",
+                "name": "Battery voltage must be displayed on UI",
+                "status": "Open",
+                "children": {
+                  "AcceptanceTest": [
+                    {
+                      "DATA": {
+                        "id": "UAV-987",
+                        "description": "The following acceptance test is repeated using 5 batteries with 5 periodic tests per battery.  Each test per battery is separated by 3 to 4 minutes of flying time.\r\n\r\nPreconditions:\r\nBattery is used during flight.\r\nThe UAV has landed.\r\n\r\nSteps:\r\nThe remaining battery percentage as reported by Dronology is recorded.\r\nThe battery\u0027s manufacturing claims for the battery are retrieved manually.\r\nThe battery\u0027s current voltage is measured by an external battery voltage checker.\r\nThe correct percentage is computed as CurrentVoltage/ManufacturerClaimedMaxVoltage * 100.\r\nThe percentage reported by Dronology is compared to correct percentage.\r\n\r\nPostConditions:\r\nThe delta between two battery levels is \u003c\u003d 5%.",
+                        "name": "Voltmeter tests battery level",
+                        "status": "Defined",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "DesignDefinition": [
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-237",
+                        "description": "The battery availability shall be displayed as a percentage computed according to the manufacturer\u0027s claims of maximum battery capacity.\r\n",
+                        "name": "Display battery life unit as a percentage",
+                        "status": "Closed",
+                        "children": {
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-237\\nui.vaadin.activeflights",
+                                "name": "UAV-237\\nedu.nd.dronology.ui.vaadin.activeflights",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "696128af-8bca-4c3e-a0dd-dbd9c50ea961",
+                                        "name": "UAV-237edu.nd.dronology.ui.vaadin/src/main/java/edu/nd/dronology/ui/vaadin/activeflights/AFInfoBox.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-1111",
+                        "description": "",
+                        "name": "The current battery capacity display shall be refreshed at least every 2 seconds.",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            },
+            {
+              "DATA": {
+                "id": "UAV-950",
+                "description": "Waypoint commands shall only be issued to a UAV if it has sufficient voltage to reach its destination and return to a safe landing place. ",
+                "name": "Sufficient battery voltage needed for all issued waypoints",
+                "status": "Open",
+                "children": {
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-952",
+                        "description": "",
+                        "name": "Battery voltage checked manually prior to takeoff",
+                        "status": "Open",
+                        "children": {
+                          "EnvironmentalAssumption": [
+                            {
+                              "DATA": {
+                                "id": "UAV-954",
+                                "description": "RPIC is responsible for assuring that the hand-held controller\u0027s voltage is greater than the minimum takeoff threshold prior to takeoff.",
+                                "name": "Check hand-held controller battery prior to takeoff",
+                                "status": "Open",
+                                "children": {},
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-953",
+                                "description": "RPIC is responsible for checking that the UAV battery\u0027s voltage is greater than, or equal to, the minimum takeoff threshold for that UAV type.",
+                                "name": "Check UAV battery prior to takeoff",
+                                "status": "Open",
+                                "children": {},
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-945": {
+      "root-node": {
+        "id": "UAV-945",
+        "description": "Area mapping is used to support aerial search and rescue.  Insufficient coverage can impact the feasibility of a successful search and rescue.",
+        "name": "Area mapping provides insufficient coverage during search and rescue ",
+        "status": "Defined",
+        "children": {
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-1044",
+                "description": "Automate the process of generating routes for river search in a predefined section of the river.",
+                "name": "Automate the process of generating routes for river search",
+                "status": "Open",
+                "children": {
+                  "EnvironmentalAssumption": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1047",
+                        "description": "",
+                        "name": "Routes are automatically generated, allocated to UAVs, and executed during  search and rescue",
+                        "status": "Open",
+                        "children": {
+                          "EnvironmentalAssumption": [
+                            {
+                              "DATA": {
+                                "id": "UAV-1054",
+                                "description": "Given a set of candidate routes and a set of available UAVs, allocate the routes to the UAVs in a way that optimizes the likelihood of a successful search.",
+                                "name": "Optimize chance of successful search through allocation of routes to available UAVs",
+                                "status": "Open",
+                                "children": {
+                                  "Context": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-1055",
+                                        "description": "",
+                                        "name": "A successful search finds a live victim as quickly as possible while minimizing risk to the rescuers.",
+                                        "status": "Open",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ],
+                                  "DesignDefinition": [
+                                    {
+                                      "DATA": {
+                                        "related-sub-tasks": [],
+                                        "id": "UAV-1057",
+                                        "description": "Check that the route allocation does not viollate the set of previously identified constraints. ",
+                                        "name": "Evaluate route allocations for safety violations",
+                                        "status": "Open",
+                                        "children": {
+                                          "EnvironmentalAssumption": [
+                                            {
+                                              "DATA": {
+                                                "related-sub-tasks": [],
+                                                "id": "UAV-844",
+                                                "description": "Given a set of flight routes assigned to each drone, determine whether each drone has sufficient power to complete its allocated flight routes.  \r\n",
+                                                "name": "Check that all UAVs have sufficient battery voltage to complete their allocated routes.",
+                                                "status": "Closed",
+                                                "children": {
+                                                  "EnvironmentalAssumption": [
+                                                    {
+                                                      "DATA": {
+                                                        "id": "UAV-1058",
+                                                        "description": "A drone can fly for 20 minutes at 20 miles per hour on a full battery. ",
+                                                        "name": "UAVs used for search and rescue can fly 10km on a full battery.",
+                                                        "status": "Defined",
+                                                        "children": {},
+                                                        "is-delegated": false
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "related-sub-tasks": [],
+                                        "id": "UAV-1056",
+                                        "description": "When a route allocation has been computed for the available UAVs and a given region, estimate the quality of a route allocation by computing a fitness function.",
+                                        "name": "Estimate the quality of a route allocation by computing a fitness function based on diverse coverage metrics.",
+                                        "status": "Open",
+                                        "children": {
+                                          "EnvironmentalAssumption": [
+                                            {
+                                              "DATA": {
+                                                "related-sub-tasks": [],
+                                                "id": "UAV-846",
+                                                "description": "This metric calculates the priority coverage score for a given route allocation. A normal route is given a weight of zero, while a PriorityAreaRoute gets a weight based on the assigned weight of the PriorityPolygon. The score for the route allocation is the sum of the score of the assignments for each drone. The score for each drone is the sum of the following calculation: (weighting of the route) * (1 / route position).\r\n",
+                                                "name": "Compute prioritized coverage",
+                                                "status": "Resolved",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "related-sub-tasks": [],
+                                                "id": "UAV-994",
+                                                "description": "Given a route allocation compute the total distance flown by all drones including start and home locations and distance between assigned routes.",
+                                                "name": "Compute the total distance flown by all UAVs",
+                                                "status": "Resolved",
+                                                "children": {
+                                                  "EnvironmentalAssumption": [
+                                                    {
+                                                      "DATA": {
+                                                        "related-sub-tasks": [],
+                                                        "id": "UAV-841",
+                                                        "description": "Compute the sum of the distances traveled per Drone from their current starting location (not necessarily home) and including all of their routes + distances between routes + final distance needed to return home.",
+                                                        "name": "Compute distance traveled per UAV",
+                                                        "status": "Closed",
+                                                        "children": {},
+                                                        "is-delegated": false
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "related-sub-tasks": [
+                                                  "UAV-834"
+                                                ],
+                                                "id": "UAV-830",
+                                                "description": "Given a vectorized form of the map divided into rectangular cells, compute route coverage of multiple UAVs assigned multiple routes by computing the number of cells visited by at least one UAV.",
+                                                "name": "Compute area coverage of a set of routes",
+                                                "status": "Closed",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "related-sub-tasks": [],
+                                                "id": "UAV-842",
+                                                "description": "Compute the ratio of downstream routes over the total number of routes.",
+                                                "name": "Estimate prevalence of downstream versus upstream search direction",
+                                                "status": "Closed",
+                                                "children": {
+                                                  "EnvironmentalAssumption": [
+                                                    {
+                                                      "DATA": {
+                                                        "id": "UAV-1059",
+                                                        "description": "",
+                                                        "name": "River searches are more effective in a downstream direction.",
+                                                        "status": "Defined",
+                                                        "children": {},
+                                                        "is-delegated": false
+                                                      }
+                                                    }
+                                                  ]
+                                                },
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "related-sub-tasks": [],
+                                                "id": "UAV-845",
+                                                "description": "Given an allocation of routes to N drones -- we need to compute a mission cost.  (This could be either positive or negative).  All metrics used to compute the mission cost must be normalized.\r\n\r\nIn phase one of the experiment, we plan to compute a task allocation score based on fixed weightings for each of the factors.  However, we need to be able to try different weights.\r\n\r\nThis calculation is currently:\r\nMission Cost \u003d 0.25 x ((Coverage) + (Downstream Ratio) + (Equality of Tasks) - (collisions) / 5)  \r\n\r\nThis weights all of them equally, and a perfect route assignment would receive a score of 1.\r\n",
+                                                "name": "Compute overall fitness function for the mission",
+                                                "status": "Resolved",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "related-sub-tasks": [],
+                                                "id": "UAV-843",
+                                                "description": "Compute an equality metric based on the delta between the longest total distance and the shortest total distance, divided by the longest total distance.",
+                                                "name": "Estimate the equality of tasks assigned to UAVs.",
+                                                "status": "Closed",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-1048",
+                                "description": "Given a region of the river demarcated by both river banks, generate flight routes that cover river banks, central parts of the river, and priority areas.",
+                                "name": "Given a demarcated region of the river,  generate a set of candidate flight routes",
+                                "status": "Open",
+                                "children": {},
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "id": "UAV-1043",
+                        "description": "The user shall utilize the UI to map the river banks in order to demarcate a region of the river to be searched.",
+                        "name": "UI enables the user to map river region over which the search will be conducted",
+                        "status": "Open",
+                        "children": {
+                          "EnvironmentalAssumption": [
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-852",
+                                "description": "Instead of using the same waypoint icons from flight routes, create small dots that represent coordinates for each side of the mapping.",
+                                "name": "Icons used to map riverbanks shall be different from those used to map flight routes.",
+                                "status": "Closed",
+                                "children": {},
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-1046",
+                                "description": "A trained river rescuer with basic training in the area mapping feature will intuitively be able to retrieve and modify previously mapped regions of the river, map new regions, and dispatch UAVs to search the region.",
+                                "name": "User Interface must be intuitive for user under time pressure and use outside in the search area.",
+                                "status": "Open",
+                                "children": {
+                                  "DesignDefinition": [
+                                    {
+                                      "DATA": {
+                                        "related-sub-tasks": [
+                                          "UAV-848",
+                                          "UAV-849",
+                                          "UAV-853"
+                                        ],
+                                        "id": "UAV-847",
+                                        "description": "Provide a flight routes tab that is intuitive for the user.",
+                                        "name": "Provide a flight routes tab that is intuitive for the user.",
+                                        "status": "Closed",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "related-sub-tasks": [],
+                                        "id": "UAV-783",
+                                        "description": "The area mapping system will provide a search bar located at the top of the screen  for locating and retrieving existing mappings.",
+                                        "name": "The area mapping system will provide search features for locating and retrieving existing mappings",
+                                        "status": "Closed",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ],
+                          "DesignDefinition": [
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [
+                                  "UAV-816",
+                                  "UAV-817",
+                                  "UAV-818",
+                                  "UAV-820",
+                                  "UAV-824",
+                                  "UAV-825",
+                                  "UAV-826",
+                                  "UAV-827",
+                                  "UAV-832",
+                                  "UAV-839"
+                                ],
+                                "id": "UAV-784",
+                                "description": "The user shall map the sides of each river bank as a set of connected  points.",
+                                "name": "The UI provides features for mapping the right and left hand side of the river banks.",
+                                "status": "Closed",
+                                "children": {},
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [
+                                  "UAV-858",
+                                  "UAV-865",
+                                  "UAV-870",
+                                  "UAV-871",
+                                  "UAV-885",
+                                  "UAV-886",
+                                  "UAV-892"
+                                ],
+                                "id": "UAV-855",
+                                "description": "The user shall specify high priority search areas on the river as polygons weighted according to priority level.",
+                                "name": "The user shall mark high priority search areas on the map.",
+                                "status": "Closed",
+                                "children": {
+                                  "EnvironmentalAssumption": [
+                                    {
+                                      "DATA": {
+                                        "related-sub-tasks": [],
+                                        "id": "UAV-898",
+                                        "description": "When the user mouses over a priority area, a popup should appear that displays the type, importance, and description. It should also allow the user to edit.",
+                                        "name": "When the user mouseovers a high priority area, a description and other data about the area shall be displayed.",
+                                        "status": "Closed",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "related-sub-tasks": [],
+                                        "id": "UAV-901",
+                                        "description": "Make it so that the user can right click a polygon priority area to change it\u0027s attributes. Also, the user should be able to drag the existing vertices to change the shape.",
+                                        "name": "High priority areas shall be moved and reshaped",
+                                        "status": "Closed",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "related-sub-tasks": [],
+                                        "id": "UAV-913",
+                                        "description": "When the user right clicks on an existing riverbank polyline, it should turn red and be saved as a priority side.",
+                                        "name": "The user shall mark critical regions of the demarcated riverbank as high priority",
+                                        "status": "Closed",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "id": "UAV-937",
+                        "description": "When the user wants to generate a route from a mapping, prompt them to select the drones they\u0027d like to use. Then send that information to generateAreaMapping().",
+                        "name": "The user shall assign a set of UAVs to search a mapped region of the river and request routes to be generated for them.",
+                        "status": "Closed",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ],
+          "ProcessRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-977",
+                "description": "For area mapping applications, routes are assigned manually.",
+                "name": "Routes assigned manually",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-999": {
+      "root-node": {
+        "id": "UAV-999",
+        "description": "UAV receives waypoint commands but does not obey them",
+        "name": "UAV receives waypoint commands but does not obey them",
+        "status": "Defined",
+        "children": {
+          "EnvironmentalAssumption": [
+            {
+              "DATA": {
+                "id": "UAV-912",
+                "description": "The UAV may not fly beyond line of sight (BLOS) of the operator enabling an operator to constantly observe the UAVs behavior and to respond accordingly. ",
+                "name": "UAV is operated under FAA Line of Sight regulations",
+                "status": "Defined",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "ProcessRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-982",
+                "description": "When the RPIC determines that Dronology has lost control of the UAV for more than _acceptable loss of communication_ minutes, then the RPIC shall take control. ",
+                "name": "RPIC will takeover control with the hand-held GCS when deemed necessary",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-861": {
+      "root-node": {
+        "id": "UAV-861",
+        "description": "UAVs are placed at random positions prior to takeoff, and may collide when flying to the first waypoint of their assigned routes",
+        "name": "Collision occurs between UAVs at takeoff",
+        "status": "Defined",
+        "children": {
+          "Context": [
+            {
+              "DATA": {
+                "id": "UAV-896",
+                "description": "bla",
+                "name": "Operators place UAVs in random positions prior to takeoff which could cause them to cross routes as they fly to their first waypoint.",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ],
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-862",
+                "description": "When in Mission Planning mode, the takeoff and positioning of all UAVs at the start of their first assigned routes shall be choreographed to avoid collisions.\t\t\t\t\t",
+                "name": "Avoid collisions when flying to first waypoint",
+                "status": "Open",
+                "children": {
+                  "AcceptanceTest": [
+                    {
+                      "DATA": {
+                        "id": "UAV-944",
+                        "description": "Create three mission plans with at least 3 UAVs per plan.\r\nDeliberately place UAVs in positions such that their routes will intersect whilst flying to their first waypoints.\r\nExecute the mission.\r\nObserve that UAVs avoided collision by following the prescribed protocol of ascending to unique altitudes for travel to the waypoint and then descending to the altitude of the first waypoint.",
+                        "name": "Test collision free flight to first waypoints",
+                        "status": "Defined",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "Simulation": [
+                    {
+                      "DATA": {
+                        "id": "UAV-1106",
+                        "description": "",
+                        "name": "Simulation of Synchronized Takeoff",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "DesignDefinition": [
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-451",
+                        "description": "When in COORDINATED_TAKEOFF mode and a UAV has reached the longitude and latitude coordinates of its first waypoint then it shall hover in place until it receives a command to descend to the target altitude of its first waypoint. ",
+                        "name": "UAV hovers in place at start of first route during coordinated takeoff awaiting instructions to proceed",
+                        "status": "Open",
+                        "children": {
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-451\\nservices.missionplanning.tasks",
+                                "name": "UAV-451\\nedu.nd.dronology.services.missionplanning.tasks",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "196803bb-1ffe-4f20-a382-40521904f441",
+                                        "name": "UAV-451edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/tasks/TakeoffTask.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-451\\nservices.missionplanning.patterns",
+                                "name": "UAV-451\\nedu.nd.dronology.services.missionplanning.patterns",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "29d4e8e6-d116-423f-960e-a5deb488b620",
+                                        "name": "UAV-451edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedTakeoffPattern.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-453",
+                        "description": "When in COORDINATED_TAKEOFF Mode and all UAVs reach the first waypoint of their assigned flight routes, the mode shall change to COORDINATED_FLIGHT and each UAV shall commence flying its prescribed route.",
+                        "name": "Transition to regular flight mode after coordinated takeoff",
+                        "status": "Open",
+                        "children": {
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-453\\nservices.missionplanning.plan",
+                                "name": "UAV-453\\nedu.nd.dronology.services.missionplanning.plan",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 1530579571000,
+                                        "commitstatus": "#manual-tagged",
+                                        "filestatus": "modified",
+                                        "committer": "JaneClelandHuang",
+                                        "commitid": "806602e13e68ca82701bdedd9369f0ba90f2900e",
+                                        "id": "edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/plan/UAVMissionPlan.java",
+                                        "name": "edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/plan/UAVMissionPlan.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "1bef23fb-34a6-4684-9592-1208019249a4",
+                                        "name": "UAV-453edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/plan/FullMissionPlan.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-448",
+                        "description": "When in COORDINATED_TAKEOFF mode and commanded to takeoff, each UAV in the group will ascend to a unique takeoff altitude such that there is a minimum distance of 4 meters between each pair of specified altitudes.",
+                        "name": "Each UAV ascends to a unique altitude during coordinated take off ascent",
+                        "status": "Open",
+                        "children": {
+                          "EnvironmentalAssumption": [
+                            {
+                              "DATA": {
+                                "id": "UAV-893",
+                                "description": "RTK positioning is active",
+                                "name": "RTK is active",
+                                "status": "Defined",
+                                "children": {},
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-923",
+                                "description": "RTK provides positioning accuracy to within 10cm.",
+                                "name": "RTK is accurate to 10 cm",
+                                "status": "Defined",
+                                "children": {},
+                                "is-delegated": false
+                              }
+                            }
+                          ],
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-448\\nservices.missionplanning.patterns",
+                                "name": "UAV-448\\nedu.nd.dronology.services.missionplanning.patterns",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "127589f6-2bb8-4887-8b3d-54c5bac7da93",
+                                        "name": "UAV-448edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedTakeoffPattern.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-448\\nservices.missionplanning.tasks",
+                                "name": "UAV-448\\nedu.nd.dronology.services.missionplanning.tasks",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "36164440-9691-4651-9d45-01d6c39d8bfa",
+                                        "name": "UAV-448edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/tasks/TaskFactory.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-450",
+                        "description": "When in COORDINATED_TAKEOFF mode and all UAVs have reached their target altitudes, each UAV shall fly in a direct path to the longitude and latitude of its first waypoint while maintaining its current altitude.",
+                        "name": "Fly to first waypoint at assigned altitude during coordinated takeoff",
+                        "status": "Open",
+                        "children": {
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-450\\nservices.missionplanning.tasks",
+                                "name": "UAV-450\\nedu.nd.dronology.services.missionplanning.tasks",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "6478f74a-bc54-419a-94f6-8edff3f70d95",
+                                        "name": "UAV-450edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/tasks/TaskFactory.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-450\\nservices.missionplanning.patterns",
+                                "name": "UAV-450\\nedu.nd.dronology.services.missionplanning.patterns",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "b4407f41-95e2-4860-bf40-b46deb122568",
+                                        "name": "UAV-450edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedTakeoffPattern.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-452",
+                        "description": "When in COORDINATED_TAKEOFF mode and all UAVs have reached the targeted longitude and latitude of their first waypoint, they shall all descend to the altitude specified in the flight route for the first waypoint.",
+                        "name": "When reaching the first waypoint, the UAV descends or ascends to the specified altitude duing coordinated takeoff",
+                        "status": "Open",
+                        "children": {
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-452\\nservices.missionplanning.patterns",
+                                "name": "UAV-452\\nedu.nd.dronology.services.missionplanning.patterns",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "97271808-aa5e-410c-b152-85797c30805d",
+                                        "name": "UAV-452edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedLandingPattern.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    },
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "e2b59e33-7fe0-4c5c-9ab8-756f6889dbd2",
+                                        "name": "UAV-452edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedTakeoffPattern.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    },
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-449",
+                        "description": "When in COORDINATED_TAKEOFF mode and a UAV reaches its target altitude it shall hover in place until it receives a command to proceed to the first waypoint of its prescribed flight route.",
+                        "name": "Hover after ascent during coordinated takeoff",
+                        "status": "Open",
+                        "children": {
+                          "EnvironmentalAssumption": [
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-537",
+                                "description": "The flight plans of two or more UAVs shall be synchronized by inserting shared synchronization points between the ordered list of flight routes assigned to each participating UAV.",
+                                "name": "Mission plan synchronization points",
+                                "status": "Closed",
+                                "children": {
+                                  "Package": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-537\\nservices.missionplanning.sync",
+                                        "name": "UAV-537\\nedu.nd.dronology.services.missionplanning.sync",
+                                        "children": {
+                                          "Code": [
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "4c2a1ef4-05a3-4701-90e2-2d61898af56e",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SynchronizationState.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "0e8494fe-1cf4-419d-bcc0-5e05e646c59a",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SynchronizationPoint.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "e6c6b4e2-9852-43b7-9a34-297e31721d02",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SyncConstants.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "f031d957-ae1b-414c-ab5e-90a0bcc31e26",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SynchronizationPoint.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "dc99116a-0a48-4eca-80b4-4f596fa7e4dc",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SynchronizationState.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "0066703f-2568-4d5c-9c61-685fb2b5089d",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SynchronizationManager.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "183b02a0-0d16-4cba-88fc-602231d707c1",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SyncConstants.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "17a3a706-627d-4265-8bb2-f7cd8d3d7251",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SynchronizationPoint.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            },
+                                            {
+                                              "DATA": {
+                                                "timestamp": 0,
+                                                "id": "80b4893b-25f8-4829-9b26-45097c0e89b5",
+                                                "name": "UAV-537edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/sync/SynchronizationState.java",
+                                                "children": {},
+                                                "is-delegated": false
+                                              }
+                                            }
+                                          ]
+                                        },
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ],
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-449\\nservices.missionplanning.patterns",
+                                "name": "UAV-449\\nedu.nd.dronology.services.missionplanning.patterns",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "7923ecdd-eec3-4508-b206-3892481295c6",
+                                        "name": "UAV-449edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/patterns/CoordinatedTakeoffPattern.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            },
+                            {
+                              "DATA": {
+                                "id": "UAV-449\\nservices.missionplanning.tasks",
+                                "name": "UAV-449\\nedu.nd.dronology.services.missionplanning.tasks",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "5e2762e5-5ae4-49ac-a404-189a3b3fb771",
+                                        "name": "UAV-449edu.nd.dronology.services/src/edu/nd/dronology/services/missionplanning/tasks/TaskFactory.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    },
+    "UAV-930": {
+      "root-node": {
+        "id": "UAV-930",
+        "description": "When Dronology issues a  RTL command to multiple UAVs their flight paths could overlap causing a potential midair collision.",
+        "name": "UAV collides with another UAV when Dronology issues RTL commands to multiple UAVs.",
+        "status": "Defined",
+        "children": {
+          "SafetyRequirement": [
+            {
+              "DATA": {
+                "id": "UAV-424",
+                "description": "When the \"return to home\" command is issued, the _FlightManager_ shall immediately command the the UAV to return to its original launch location using a unique flight route.",
+                "name": "Return home along a unique path when issued RTL command",
+                "status": "Closed",
+                "children": {
+                  "Requirement": [
+                    {
+                      "DATA": {
+                        "id": "UAV-975",
+                        "description": "After the user cedes control of the UAV from Dronology, the user can issue a RTL command using the hand-held GCS.",
+                        "name": "User issues RTL command using GCS.",
+                        "status": "Open",
+                        "children": {
+                          "EnvironmentalAssumption": [
+                            {
+                              "DATA": {
+                                "related-sub-tasks": [],
+                                "id": "UAV-457",
+                                "description": "A UAV that executes its inbuilt RTL function shall fly at a uniquely defined altitude preestablished in its firmware. ",
+                                "name": "UAV default RTL uses predefined altitude",
+                                "status": "Open",
+                                "children": {
+                                  "EnvironmentalAssumption": [
+                                    {
+                                      "DATA": {
+                                        "id": "UAV-974",
+                                        "description": "All UAVs provide functionality that allows them to be preprogrammed with a RTL altitude.",
+                                        "name": "All UAVs support user defined RTL altitudes",
+                                        "status": "Defined",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": true
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "AcceptanceTest": [
+                    {
+                      "DATA": {
+                        "id": "UAV-976",
+                        "description": "Preconditions:\r\nUAV is flying within the geofence\r\n\r\nSteps:\r\nDronology controller selects the UAV on the UI and presses the RTL button.\r\nThe UAV ascends or descends to a unique altitude.\r\nThe UAV flies to the longitude and latitude of its home coordinates at the assigned altitude.\r\nThe UAV descends vertical until it lands.\r\n\r\nPostconditions:\r\nThe UAV returns to its home coordinates without collisions with other UAVs in flight.",
+                        "name": "Test RTL",
+                        "status": "Defined",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "ProcessRequirement": [
+                    {
+                      "DATA": {
+                        "id": "UAV-978",
+                        "description": "",
+                        "name": "RTL for multiple UAVs executed one at a time",
+                        "status": "Open",
+                        "children": {},
+                        "is-delegated": false
+                      }
+                    }
+                  ],
+                  "DesignDefinition": [
+                    {
+                      "DATA": {
+                        "related-sub-tasks": [],
+                        "id": "UAV-520",
+                        "description": "When the UAV is commanded to return to home, the current flight plan shall be removed and a new flight plan shall be created containing only a single waypoint representing its original launch coordinates.",
+                        "name": "RTL issued as single waypoint",
+                        "status": "Closed",
+                        "children": {
+                          "Package": [
+                            {
+                              "DATA": {
+                                "id": "UAV-520\\ncore.flightzone",
+                                "name": "UAV-520\\nedu.nd.dronology.core.flightzone",
+                                "children": {
+                                  "Code": [
+                                    {
+                                      "DATA": {
+                                        "timestamp": 0,
+                                        "id": "e8d8f030-0436-4a39-9577-70328915050d",
+                                        "name": "UAV-520edu.nd.dronology.core/src/edu/nd/dronology/core/flightzone/FlightZoneManager2.java",
+                                        "children": {},
+                                        "is-delegated": false
+                                      }
+                                    }
+                                  ]
+                                },
+                                "is-delegated": false
+                              }
+                            }
+                          ]
+                        },
+                        "is-delegated": false
+                      }
+                    }
+                  ]
+                },
+                "is-delegated": false
+              }
+            }
+          ],
+          "SafetyAnalysis": [
+            {
+              "DATA": {
+                "analyis-type": "FMECA",
+                "id": "UAV-970",
+                "description": "FMECA identifying faults associated with RTL commands.\r\n(File is attached).",
+                "name": "Fault analysis for RTL",
+                "status": "Open",
+                "children": {},
+                "is-delegated": false
+              }
+            }
+          ]
+        },
+        "is-delegated": false
+      }
+    }
+  },
+  "version": "001",
+  "creationdate": 1534031666456
+}
