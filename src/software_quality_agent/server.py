@@ -9,7 +9,13 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
-from .schemas import ChatRequest, DatabaseReadRequest, DatabaseWriteRequest, ReportRequest
+from .schemas import (
+    ChatRequest,
+    DatabaseReadRequest,
+    DatabaseWriteRequest,
+    ReportRequest,
+    RequirementCoverageRequest,
+)
 from .service import QualityAgentService
 from .store import QualityStore
 
@@ -89,6 +95,13 @@ def build_app() -> FastAPI:
             filename=file.filename or "project.pdf",
             content=await file.read(),
         )
+
+    @app.post("/api/requirements/coverage")
+    async def analyze_requirement_coverage(
+        request: RequirementCoverageRequest,
+        service: QualityAgentService = Depends(get_service),
+    ):
+        return await service.analyze_requirement_coverage(request)
 
     @app.get("/api/reports")
     async def list_reports(project_id: str, service: QualityAgentService = Depends(get_service)):

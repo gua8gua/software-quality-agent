@@ -20,9 +20,13 @@ from .schemas import (
     ReportRequest,
     ReportResponse,
     RequirementCandidate,
+    RequirementCoverage,
+    RequirementCoverageResponse,
+    RequirementCoverageRequest,
     RequirementExtractionResponse,
     RequirementPoint,
 )
+from .repository import CodeFile, RepositoryScanner, RepositorySearcher, expand_keywords
 from .store import Artifact, Project, QualityStore, ReportRun, TraceLink
 
 
@@ -468,6 +472,99 @@ class RequirementDecompositionAgent:
         return data
 
 
+class RequirementCoverageAgent:
+    """使用本地检索缩小范围，再让 LLM 判断需求是否被代码实现。"""
+
+    max_concurrency = 4
+
+    def __init__(self, llm: LLMClient) -> None:
+        self.llm = llm
+        self.scanner = RepositoryScanner()
+        self.searcher = RepositorySearcher()
+        self._semaphore = asyncio.Semaphore(self.max_concurrency)
+
+    async def analyze(
+        self, request: RequirementCoverageRequest
+    ) -> RequirementCoverageResponse:
+        # 仓库只扫描一次，避免每条需求都重复读取整个代码库。
+        files = self.scanner.scan(request.repository_path)
+        if not files:
+            raise ValueError("代码仓库中没有找到支持的源码文件")
+
+        async def analyze_one(requirement: RequirementPoint) -> RequirementCoverage:
+            return await self._analyze_one(requirement, files)
+
+        results = await asyncio.gather(
+            *(analyze_one(requirement) for requirement in request.requirements)
+        )
+        return RequirementCoverageResponse(
+            repository_path=request.repository_path,
+            results=results,
+        )
+
+    async def _analyze_one(
+        self, requirement: RequirementPoint, files: list[CodeFile]
+    ) -> RequirementCoverage:
+        keywords = expand_keywords(requirement.statement)
+        matches = self.searcher.search(files, keywords)
+        if not matches:
+            # 没有候选代码时不调用 LLM，避免模型凭空推测“已实现”。
+            return RequirementCoverage(
+                requirement_id=requirement.requirement_id,
+                status="not_found",
+                gaps=["本地代码检索没有找到相关候选片段"],
+                confidence=0.05,
+            )
+
+        candidate_text = "\n\n".join(
+            f"[{match.reference}]\n{match.snippet}" for match in matches
+        )
+        async with self._semaphore:
+            answer = await self.llm.chat(
+                system_prompt=(
+                    "你是软件需求覆盖分析助手。判断候选代码是否实现给定需求。"
+                    "只能基于候选代码作出判断，不能凭空生成文件路径、函数名或实现细节。"
+                    "仅有注释、TODO、类型声明、空函数、测试桩或相似命名不能算 implemented。"
+                    "如果只实现一部分，返回 partial；证据不足但存在相关代码，返回 candidate 或 needs_review。"
+                    "必须返回合法 JSON，不要 Markdown。"
+                ),
+                user_prompt=(
+                    f"需求编号：{requirement.requirement_id}\n"
+                    f"需求内容：{requirement.statement}\n\n"
+                    "候选代码片段如下，code_refs 只能使用方括号中的引用：\n"
+                    f"{candidate_text}\n\n"
+                    "返回格式："
+                    '{"status":"not_found|candidate|partial|implemented|needs_review",'
+                    '"code_refs":[],"evidence":[],"gaps":[],"confidence":0.0}'
+                ),
+                response_format={"type": "json_object"},
+                max_tokens=1800,
+            )
+
+        data = self._load_json(answer, stage=f"Coverage {requirement.requirement_id}")
+        data["requirement_id"] = requirement.requirement_id
+        result = RequirementCoverage.model_validate(data)
+
+        # 只保留检索真实产生的引用，防止模型编造不存在的代码位置。
+        valid_refs = {match.reference for match in matches}
+        result.code_refs = [reference for reference in result.code_refs if reference in valid_refs]
+        if result.status != "not_found" and not result.code_refs:
+            result.code_refs = [match.reference for match in matches[:3]]
+        return result
+
+    def _load_json(self, answer: str, *, stage: str) -> dict[str, Any]:
+        """统一解析 LLM JSON，错误中带上具体需求编号，便于定位失败请求。"""
+        if not answer.strip():
+            raise ValueError(f"{stage} 阶段的 LLM 返回为空")
+        try:
+            data = json.loads(answer)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"{stage} 阶段的 LLM 返回不是合法 JSON") from exc
+        if not isinstance(data, dict):
+            raise ValueError(f"{stage} 阶段的 LLM 返回结果不是 JSON 对象")
+        return data
+
+
 class DatabaseReadAgent:
     def __init__(self, store: QualityStore) -> None:
         self.store = store
@@ -583,6 +680,7 @@ class OrchestratorAgent:
         evidence_agent: EvidenceAgent,
         verifier_agent: VerifierAgent,
         requirement_agent: RequirementDecompositionAgent,
+        coverage_agent: RequirementCoverageAgent,
     ) -> None:
         self.conversation_agent = conversation_agent
         self.report_agent = report_agent
@@ -591,6 +689,7 @@ class OrchestratorAgent:
         self.evidence_agent = evidence_agent
         self.verifier_agent = verifier_agent
         self.requirement_agent = requirement_agent
+        self.coverage_agent = coverage_agent
 
     async def handle_chat(self, request: ChatRequest, project: Project) -> ChatResponse:
         evidence = await self.evidence_agent.collect(project)
@@ -622,3 +721,8 @@ class OrchestratorAgent:
             page_count=page_count,
             page_text=page_text,
         )
+
+    async def handle_requirement_coverage(
+        self, request: RequirementCoverageRequest
+    ) -> RequirementCoverageResponse:
+        return await self.coverage_agent.analyze(request)

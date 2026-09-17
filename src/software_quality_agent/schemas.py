@@ -91,6 +91,32 @@ class RequirementExtractionResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class RequirementCoverageRequest(BaseModel):
+    """请求对一组需求执行代码实现覆盖分析。"""
+
+    requirements: list[RequirementPoint] = Field(min_length=1)
+    # 默认扫描当前后端进程所在的项目目录，前端也可以传入明确路径。
+    repository_path: str = Field(default=".", min_length=1)
+
+
+class RequirementCoverage(BaseModel):
+    """单条需求的代码实现判断及其可审计证据。"""
+
+    requirement_id: str
+    status: Literal["not_found", "candidate", "partial", "implemented", "needs_review"]
+    code_refs: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+    confidence: float = Field(ge=0.0, le=1.0)
+
+
+class RequirementCoverageResponse(BaseModel):
+    """批量需求覆盖分析结果。"""
+
+    repository_path: str
+    results: list[RequirementCoverage]
+
+
 class DatabaseReadRequest(BaseModel):
     scope: Literal["projects", "artifacts", "trace_links", "reports", "audit_events"]
     project_id: str | None = None
