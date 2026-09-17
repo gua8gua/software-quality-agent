@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   Table2,
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import {
@@ -18,6 +19,7 @@ import {
   loadSchema,
   readDatabase,
   sendChat,
+  analyzeRequirementCoverage,
   extractRequirements,
   writeDatabase,
 } from "./api";
@@ -31,6 +33,7 @@ import type {
   ReportSummary,
   ReportType,
   RequirementExtractionResponse,
+  RequirementCoverageResponse,
   ViewId,
   WriteOperation,
 } from "./types";
@@ -139,6 +142,9 @@ function App() {
   const [requirementResult, setRequirementResult] = useState<RequirementExtractionResponse | null>(null);
   const [requirementFile, setRequirementFile] = useState<File | null>(null);
   const [requirementError, setRequirementError] = useState("");
+  const [repositoryPath, setRepositoryPath] = useState("test_codes/LeKV");
+  const [coverageResult, setCoverageResult] = useState<RequirementCoverageResponse | null>(null);
+  const [detailRequirementId, setDetailRequirementId] = useState<string | null>(null);
   const [readScope, setReadScope] = useState<DatabaseScope>("artifacts");
   const [readKeyword, setReadKeyword] = useState("");
   const [readLimit, setReadLimit] = useState(20);
@@ -298,9 +304,32 @@ function App() {
     try {
       const response = await extractRequirements(requirementFile);
       setRequirementResult(response);
+      setCoverageResult(null);
+      setDetailRequirementId(null);
       notify(`已拆分 ${response.requirements.length} 条需求`);
     } catch (error) {
       setRequirementError(error instanceof Error ? error.message : "PDF 解析失败");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleAnalyzeCoverage() {
+    if (!requirementResult?.requirements.length) {
+      setRequirementError("请先完成需求拆分");
+      return;
+    }
+    setBusy(true);
+    setRequirementError("");
+    try {
+      const response = await analyzeRequirementCoverage(
+        requirementResult.requirements,
+        repositoryPath.trim() || ".",
+      );
+      setCoverageResult(response);
+      notify(`已完成 ${response.results.length} 条需求的代码覆盖分析`);
+    } catch (error) {
+      setRequirementError(error instanceof Error ? error.message : "代码覆盖分析失败");
     } finally {
       setBusy(false);
     }
@@ -732,13 +761,19 @@ function App() {
           <div className="panel-header">
             <div>
               <span className="eyebrow">需求工程</span>
-              <h3>上传项目 PDF，自动拆分需求</h3>
+              <h3>需求拆分与代码实现检查</h3>
             </div>
             <FileText size={22} />
           </div>
           <p className="lead">
-            系统会提取 PDF 文本，调用需求分析 Agent，将项目内容拆分为可实现、可验证、可追踪的需求点。
+            先从项目书中整理出适合代码覆盖分析的完整需求，再基于指定代码仓库判断每条需求是否已有实现。
           </p>
+          <div className="step-indicator">
+            <span className={requirementResult ? "step completed" : "step active"}>1. 拆分需求</span>
+            <span className={coverageResult ? "step completed" : requirementResult ? "step active" : "step"}>
+              2. 检查代码实现
+            </span>
+          </div>
           <label className="upload-dropzone">
             <FileUp size={28} />
             <strong>{requirementFile?.name ?? "选择项目 PDF 文件"}</strong>
@@ -759,7 +794,25 @@ function App() {
             disabled={busy || !requirementFile}
           >
             <Sparkles size={16} />
-            <span>{busy ? "解析中..." : "开始拆分需求"}</span>
+            <span>{busy ? "处理中..." : "第一步：拆分需求"}</span>
+          </button>
+          <label className="field-label">
+            <span>待分析的代码仓库路径</span>
+            <input
+              className="text-input"
+              value={repositoryPath}
+              onChange={(event) => setRepositoryPath(event.target.value)}
+              placeholder="例如：test_codes/LeKV"
+            />
+          </label>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleAnalyzeCoverage}
+            disabled={busy || !requirementResult?.requirements.length}
+          >
+            <ShieldCheck size={16} />
+            <span>{busy ? "处理中..." : "第二步：检查代码实现"}</span>
           </button>
           {requirementError ? <p className="feedback error-text">{requirementError}</p> : null}
           {requirementResult ? (
@@ -793,10 +846,28 @@ function App() {
             {requirementResult?.requirements.length ? (
               <div className="requirement-list">
                 {requirementResult.requirements.map((requirement) => (
-                  <article className="requirement-card" key={requirement.requirement_id}>
-                    <strong>{requirement.requirement_id}</strong>
-                    <p>{requirement.statement}</p>
-                  </article>
+                  <button
+                    className="requirement-card"
+                    key={requirement.requirement_id}
+                    type="button"
+                    onClick={() => setDetailRequirementId(requirement.requirement_id)}
+                  >
+                    <span className="requirement-summary">
+                      <span className="requirement-summary-main">
+                        <strong>{requirement.requirement_id}</strong>
+                        <span className="requirement-summary-text">{requirement.statement}</span>
+                      </span>
+                      {coverageResult ? (() => {
+                        const coverage = coverageResult.results.find(
+                          (item) => item.requirement_id === requirement.requirement_id,
+                        );
+                        return coverage ? (
+                          <span className="mini-pill">{coverage.status}</span>
+                        ) : null;
+                      })() : null}
+                    </span>
+                    <span className="requirement-open-hint">点击查看详细分析</span>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -890,6 +961,86 @@ function App() {
         {activeView === "requirements" ? renderRequirementsView() : null}
         {activeView === "database" ? renderDatabaseView() : null}
       </main>
+
+      {detailRequirementId ? (() => {
+        const requirement = requirementResult?.requirements.find(
+          (item) => item.requirement_id === detailRequirementId,
+        );
+        if (!requirement) return null;
+        const coverage = coverageResult?.results.find(
+          (item) => item.requirement_id === detailRequirementId,
+        );
+        return (
+          <div
+            className="requirement-modal-backdrop"
+            role="presentation"
+            onClick={() => setDetailRequirementId(null)}
+          >
+            <section
+              className="requirement-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="requirement-detail-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="requirement-modal-header">
+                <div>
+                  <span className="eyebrow">需求详细分析</span>
+                  <h3 id="requirement-detail-title">{requirement.requirement_id}</h3>
+                </div>
+                <button
+                  className="icon-button"
+                  type="button"
+                  aria-label="关闭需求详情"
+                  onClick={() => setDetailRequirementId(null)}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="requirement-modal-body">
+                <div>
+                  <span className="detail-label">完整需求</span>
+                  <p>{requirement.statement}</p>
+                </div>
+                {coverage ? (
+                  <>
+                    <div className="detail-meta">
+                      <span className="detail-label">代码实现判断</span>
+                      <span className="mini-pill">{coverage.status}</span>
+                    </div>
+                    <div className="detail-meta">
+                      <span className="detail-label">置信度</span>
+                      <strong>{Math.round(coverage.confidence * 100)}%</strong>
+                    </div>
+                    {coverage.code_refs.length ? (
+                      <div>
+                        <span className="detail-label">代码引用</span>
+                        <ul className="bullet-list">
+                          {coverage.code_refs.map((reference) => <li key={reference}>{reference}</li>)}
+                        </ul>
+                      </div>
+                    ) : null}
+                    {coverage.evidence.length ? (
+                      <div>
+                        <span className="detail-label">判断依据</span>
+                        <p>{coverage.evidence.join("；")}</p>
+                      </div>
+                    ) : null}
+                    {coverage.gaps.length ? (
+                      <div>
+                        <span className="detail-label warning-list">实现缺口</span>
+                        <p className="warning-list">{coverage.gaps.join("；")}</p>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="muted-text">完成代码实现检查后，这里会显示代码证据和判断结果。</p>
+                )}
+              </div>
+            </section>
+          </div>
+        );
+      })() : null}
 
       {toast ? <div className="toast">{toast}</div> : null}
     </div>

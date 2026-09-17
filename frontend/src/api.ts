@@ -10,6 +10,8 @@ import type {
   ReportResponse,
   ReportSummary,
   ReportType,
+  RequirementCoverageResponse,
+  RequirementPoint,
   RequirementExtractionResponse,
   ViewId,
   WriteOperation,
@@ -160,4 +162,17 @@ export async function extractRequirements(file: File): Promise<RequirementExtrac
     throw new Error(detail || `HTTP ${response.status}`);
   }
   return response.json() as Promise<RequirementExtractionResponse>;
+}
+
+export async function analyzeRequirementCoverage(
+  requirements: RequirementPoint[],
+  repositoryPath: string,
+): Promise<RequirementCoverageResponse> {
+  return request<RequirementCoverageResponse>("/api/requirements/coverage", {
+    method: "POST",
+    body: JSON.stringify({
+      requirements,
+      repository_path: repositoryPath,
+    }),
+  });
 }

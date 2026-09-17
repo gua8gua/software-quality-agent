@@ -84,3 +84,24 @@ export interface RequirementExtractionResponse {
   requirements: RequirementPoint[];
   warnings: string[];
 }
+
+export type RequirementCoverageStatus =
+  | "not_found"
+  | "candidate"
+  | "partial"
+  | "implemented"
+  | "needs_review";
+
+export interface RequirementCoverage {
+  requirement_id: string;
+  status: RequirementCoverageStatus;
+  code_refs: string[];
+  evidence: string[];
+  gaps: string[];
+  confidence: number;
+}
+
+export interface RequirementCoverageResponse {
+  repository_path: string;
+  results: RequirementCoverage[];
+}
