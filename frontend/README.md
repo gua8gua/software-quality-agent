@@ -8,12 +8,11 @@
 npm ci
 ```
 
-按照 [Agent 启动说明](../README.md) 启动 8010 服务，按照 [质量后端启动说明](../../software-quality-management-backend/README.md) 启动 8000 服务。
+按照 [质量后端启动说明](../../software-quality-management-backend/README.md) 启动 8000 服务。开发模式不依赖 Agent 模型服务。
 
 ## 开发启动
 
 ```powershell
-$env:AGENT_BACKEND_URL = "http://127.0.0.1:8010"
 $env:QUALITY_BACKEND_URL = "http://127.0.0.1:8000"
 npm run dev
 ```
@@ -22,12 +21,11 @@ npm run dev
 
 | 页面 | 地址 |
 | --- | --- |
-| 对话 | `http://localhost:5173/#/chat` |
-| 报告生成 | `http://localhost:5173/#/report` |
-| 需求拆分 | `http://localhost:5173/#/requirements` |
-| 数据库读写 | `http://localhost:5173/#/database` |
 | 项目资料库 | `http://localhost:5173/#/projects` |
-| 模型配置 | `http://localhost:5173/#/models` |
+
+项目页只保留文本、代码两类顶层数据。文本子类只有需求说明文档、设计说明文档。保留文件夹父子层级、上传、原文预览、下载和删除。没有 TLR、审核、建议、图谱、批次或历史类型兼容页面。
+
+详情页使用后端返回的真实 MIME 和 `original_file_url` 读取原文件字节。PDF 使用 npm 稳定版 `pdfjs-dist`（PDF.js）及官方 PDFViewer；DOCX 使用 `docx-preview.renderAsync`，在隔离 iframe 中保留表格、图片、页眉页脚及文件已有分页。DOCX 渲染器受 HTML 布局限制，不保证与 Word 完全一致。旧 DOC 仅提供下载，不伪装 DOCX。UTF-8 文本和代码直接显示原文件内容，不读取抽取 JSON。PDF worker、CMap、字体、WASM 随构建本地发布，不依赖 CDN。
 
 ## 构建与启动
 
@@ -47,9 +45,9 @@ npm run build
 
 ## 配置地址
 
-开发代理使用 `AGENT_BACKEND_URL` 和 `QUALITY_BACKEND_URL`。发布服务使用 Agent 根目录 `.env` 的 `QUALITY_BACKEND_URL`。
+开发代理使用 `QUALITY_BACKEND_URL`。发布服务使用 Agent 根目录 `.env` 的 `QUALITY_BACKEND_URL`。
 
-需要浏览器直接访问指定接口时，在 `frontend/.env` 设置 `VITE_AGENT_API_BASE`、`VITE_QUALITY_API_BASE`；`VITE_QUALITY_API_BASE` 填写到 `/api/v1/tlr`。设置后重新启动开发服务或重新构建。默认工作空间可通过 `VITE_TENANT_ID` 设置。
+管理 API 唯一基址为 `VITE_PROJECT_API_BASE`（默认 `/api/v1`），调用 `/projects` 及其子资源。没有旧 `/tlr` API 适配。默认租户通过 `VITE_TENANT_ID` 设置。
 
 ## 停止
 

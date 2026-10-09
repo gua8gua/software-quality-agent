@@ -44,6 +44,7 @@ playwright-report/
 test-results/
 
 # Downloaded knowledge-base payloads (large and/or subject to source licenses).
+datasets/EasyClinic/
 # Keep the reproducible catalog in Git; rebuild local payloads with the download script.
 datasets/knowledge-base/*
 !datasets/knowledge-base/README.md

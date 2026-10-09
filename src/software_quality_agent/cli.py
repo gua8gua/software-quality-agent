@@ -6,7 +6,7 @@ import uvicorn
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Software Quality Agent")
+    parser = argparse.ArgumentParser(description="Software Quality Workbench proxy")
     subparsers = parser.add_subparsers(dest="command")
 
     serve = subparsers.add_parser("serve", help="Run the HTTP server")
@@ -26,4 +26,3 @@ def main() -> None:
 
 if __name__ == "__main__":  # pragma: no cover
     main()
-

@@ -12,7 +12,7 @@ function subscribe(update: () => void) {
 export function useHashRoute() {
   const hash = useSyncExternalStore(subscribe, () => window.location.hash);
   return useMemo(() => {
-    try { return hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent); }
+    try { return hash.split("?")[0].replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent); }
     catch { return []; }
   }, [hash]);
 }
