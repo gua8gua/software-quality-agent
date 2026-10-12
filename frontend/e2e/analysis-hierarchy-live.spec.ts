@@ -1,0 +1,43 @@
+import { test, expect } from "@playwright/test";
+import { mkdirSync } from "node:fs";
+
+const project = "real-srs-sds-20260929";
+const batch = "aa62daed-8d58-47d6-aa6c-4c12ffbbfd93";
+const images = "../artifacts/page-design/20261003";
+test.beforeAll(() => mkdirSync(images, {recursive: true}));
+
+test("真实批次的层级、评价和证据下钻（只读）", async ({page}) => {
+  await page.setViewportSize({width: 1840, height: 1120});
+  const errors: string[] = [], mutations: string[] = [];
+  page.on("pageerror", e => errors.push(e.message));
+  page.on("request", r => {if (r.url().includes("/api/") && r.method() !== "GET") mutations.push(r.url());});
+  await page.goto(`/#/projects/${project}/analysis/batch/${batch}`);
+  await expect(page.locator(".analysis-hierarchy-layout")).toBeVisible();
+  await expect(page.locator(".analysis-detail-section").first()).toContainText("需求内容");
+  await expect(page.locator(".analysis-dashboard-metrics")).toContainText("分析异常");
+  await expect(page.getByRole("treeitem").first()).toBeVisible();
+  await page.screenshot({path: `${images}/analysis-hierarchy-desktop.png`, fullPage: true});
+  await page.locator(".analysis-problem-list .ant-table-row").first().click();
+  await expect(page.locator(".analysis-leaf-heading")).toContainText("分析异常");
+  await expect(page.locator(".analysis-hierarchy-detail .overall-assessment")).toContainText("分析执行异常");
+  await expect(page.locator(".analysis-hierarchy-detail .suggestion-item")).toHaveCount(0);
+  await page.getByRole("checkbox", {name: "仅看异常"}).check();
+  await expect(page.getByRole("treeitem").first()).toBeVisible();
+  await page.getByRole("checkbox", {name: "仅看异常"}).uncheck();
+  await page.getByRole("tab", {name: "设计层级", exact: true}).click();
+  await expect(page.locator(".analysis-tree-note")).toContainText("正式链接");
+  await expect(page.getByRole("treeitem").first()).toBeVisible();
+  await page.getByRole("tab", {name: "需求层级", exact: true}).click();
+  await page.getByRole("textbox", {name: "搜索文档层级"}).fill("功能需求");
+  await expect(page.locator(".analysis-hierarchy-sidebar .ant-tree-title").filter({hasText: "3.3 功能需求"}).first()).toBeVisible();
+  await page.locator(".analysis-hierarchy-sidebar .ant-tree-title").filter({hasText: "3.3 功能需求"}).first().click();
+  await expect(page.locator(".analysis-node-banner h3")).toContainText("功能需求");
+  await page.getByRole("textbox", {name: "搜索文档层级"}).fill("");
+  await page.screenshot({path: `${images}/analysis-hierarchy-section.png`, fullPage: true});
+  await page.setViewportSize({width: 760, height: 1050});
+  await expect(page.locator(".analysis-hierarchy-main")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  await page.screenshot({path: `${images}/analysis-hierarchy-narrow.png`, fullPage: true});
+  expect(errors).toEqual([]);
+  expect(mutations).toEqual([]);
+});

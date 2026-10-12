@@ -1,10 +1,15 @@
 import ProjectsPanel from "./quality/ProjectsPanel";
+import TaskBoard from "./quality/TaskBoard";
+import { ModelConfigPage } from "./quality/ModelConfig";
+import "./quality/model-config.css";
+import "./quality/library.css";
 import { navigate, useHashRoute } from "./navigation";
 import {
   Database,
   FileText,
   FileUp,
   MessageSquareText,
+  ListTodo,
   RefreshCw,
   Send,
   ShieldCheck,
@@ -15,17 +20,13 @@ import {
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   generateReport,
-  listChatHistory,
-  listProjects,
   listReports,
-  loadSchema,
   readDatabase,
-  sendChat,
   analyzeRequirementCoverage,
   extractRequirements,
   writeDatabase,
 } from "./api";
-import { mockMessages } from "./mock";
+import { listChatHistory, listProjects, loadSchema, resetChat, sendChat } from "./console-api";
 import type {
   ChatMessage,
   DatabaseReadResponse,
@@ -42,7 +43,8 @@ import type {
 
 const views: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
   { id: "models", label: "模型配置", icon: <Sparkles size={18} /> },
-  { id: "quality", label: "项目资料库", icon: <Database size={18} /> },
+  { id: "quality", label: "项目管理", icon: <Database size={18} /> },
+  { id: "tasks", label: "任务队列", icon: <ListTodo size={18} /> },
   { id: "chat", label: "对话", icon: <MessageSquareText size={18} /> },
   { id: "report", label: "报告生成", icon: <FileText size={18} /> },
   { id: "requirements", label: "需求拆分", icon: <FileUp size={18} /> },
@@ -124,27 +126,28 @@ function defaultWritePayload(operation: WriteOperation, projectId: string): stri
 
 function App() {
   const route = useHashRoute();
-  const activeView: ViewId = route[0] === "projects" ? "quality" : route[0] === "models" ? "models"
-    : ["report", "requirements"].includes(route[0]) ? route[0] as ViewId : "chat";
+  const activeView: ViewId = !route.length || route[0] === "projects" ? "quality" : route[0] === "models" ? "models"
+    : ["report", "requirements", "tasks"].includes(route[0]) ? route[0] as ViewId : "chat";
   const qualityVisible = activeView === "quality" || activeView === "models";
-  const lastProjectPath = useRef("/projects");
+  const projectLibraryVisible = activeView === "quality" && route[0] === "projects" && route.length >= 2;
   const lastQualityRoute = useRef<string[]>(["projects"]);
   if (qualityVisible) lastQualityRoute.current = route;
-  if (route[0] === "projects") lastProjectPath.current = "/" + route.map(encodeURIComponent).join("/");
   const [tenant, setTenant] = useState(import.meta.env.VITE_TENANT_ID || "local");
   const [tenantDraft, setTenantDraft] = useState(tenant);
   const [qualityVisited, setQualityVisited] = useState(qualityVisible);
   useEffect(() => { if (qualityVisible) setQualityVisited(true); }, [qualityVisible]);
   useEffect(() => { window.scrollTo(0, 0); }, [route.join("/")]);
   function openView(view: ViewId) {
-    navigate(view === "quality" ? lastProjectPath.current : `/${view}`);
+    navigate(view === "quality" ? "/projects" : `/${view}`);
   }
 
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
+  useEffect(() => { if (route[0] === "projects" && route[1]) setSelectedProjectId(route[1]); }, [route[0], route[1]]);
   const [schema, setSchema] = useState<DatabaseSchema | null>(null);
   const [chatMode, setChatMode] = useState<(typeof qualityModes)[number]["id"]>("quality");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatError, setChatError] = useState("");
   const [chatDraft, setChatDraft] = useState("");
   const [reportType, setReportType] = useState<ReportType>("quality_overview");
   const [reportFocus, setReportFocus] = useState<string[]>(["requirements", "code", "tests"]);
@@ -173,12 +176,12 @@ function App() {
   );
 
   useEffect(() => {
-    void bootstrap();
-  }, []);
+    void bootstrap().catch(error => setToast(error instanceof Error ? error.message : String(error)));
+  }, [tenant]);
 
   useEffect(() => {
     if (!selectedProjectId) return;
-    void refreshProjectScopedData(selectedProjectId);
+    void refreshProjectScopedData(selectedProjectId).catch(error => setToast(error instanceof Error ? error.message : String(error)));
     setWritePayload((current) => {
       const currentText = current.trim();
       if (!currentText) {
@@ -194,7 +197,7 @@ function App() {
       }
       return current;
     });
-  }, [selectedProjectId]);
+  }, [selectedProjectId, tenant]);
 
   useEffect(() => {
     if (!toast) return;
@@ -203,25 +206,25 @@ function App() {
   }, [toast]);
 
   async function bootstrap() {
-    const [projectRows, schemaRows] = await Promise.all([listProjects(), loadSchema()]);
+    const [projectRows, schemaRows] = await Promise.all([listProjects(tenant), loadSchema()]);
     setProjects(projectRows);
     setSchema(schemaRows);
     const firstProject = projectRows[0];
     if (firstProject) {
       setSelectedProjectId((current) => current || firstProject.id);
       const [history, reports] = await Promise.all([
-        listChatHistory(firstProject.id),
+        listChatHistory(firstProject.id, tenant),
         listReports(firstProject.id),
       ]);
-      setChatMessages(history.length ? history : mockMessages);
+      setChatMessages(history);
       setReportHistory(reports);
       setWritePayload(defaultWritePayload(writeOperation, firstProject.id));
     }
   }
 
   async function refreshProjectScopedData(projectId: string) {
-    const [history, reports] = await Promise.all([listChatHistory(projectId), listReports(projectId)]);
-    setChatMessages(history.length ? history : mockMessages);
+    const [history, reports] = await Promise.all([listChatHistory(projectId, tenant), listReports(projectId)]);
+    setChatMessages(history);
     setReportHistory(reports);
   }
 
@@ -262,6 +265,7 @@ function App() {
         message: userMessage.content,
         mode: chatMode,
         history: nextHistory,
+        tenant_id: tenant,
       });
       setChatMessages((current) => [
         ...current,
@@ -272,6 +276,8 @@ function App() {
         },
       ]);
       notify("对话已发送");
+    } catch (error) {
+      setChatError(error instanceof Error ? error.message : String(error));
     } finally {
       setBusy(false);
     }
@@ -388,6 +394,10 @@ function App() {
     setWritePayload(defaultWritePayload(operation, selectedProjectId));
   }
 
+  function renderWorkspaceControl() {
+    return <form className="inline-controls" onSubmit={event => { event.preventDefault(); if (tenantDraft.trim()) setTenant(tenantDraft.trim()); }}><label className="field compact">工作空间<input value={tenantDraft} onChange={event => setTenantDraft(event.target.value)} required /></label><button className="ghost-button" disabled={!tenantDraft.trim()}>切换</button></form>;
+  }
+
   function renderChatView() {
     return (
       <section className="workspace-grid two-up">
@@ -408,13 +418,18 @@ function App() {
                   ))}
                 </select>
               </label>
-              <button className="ghost-button" type="button" onClick={() => setChatMessages(mockMessages)}>
+              <label className="field compact"><span>项目</span><select value={selectedProjectId} onChange={event => setSelectedProjectId(event.target.value)}>{projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label>
+              <button className="ghost-button" type="button" disabled={busy || !selectedProjectId} onClick={() => {
+                setBusy(true);
+                void resetChat(selectedProjectId, tenant).then(() => { setChatMessages([]); setChatError(""); }).catch(error => setChatError(String(error))).finally(() => setBusy(false));
+              }}>
                 <RefreshCw size={16} />
                 <span>重置</span>
               </button>
             </div>
           </div>
 
+          {chatError && <div className="qm-notice" role="alert">{chatError}</div>}
           <div className="message-list">
             {chatMessages.map((message, index) => (
               <div key={`${message.role}-${index}`} className={`message-row ${message.role}`}>
@@ -892,13 +907,13 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${projectLibraryVisible || activeView === "tasks" ? " project-library-shell" : ""}`}>
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">SQM</div>
           <div>
-            <h1>Software Quality Console</h1>
-            <p>Chat / Report / DB</p>
+            <h1>软件质量管理平台</h1>
+            <p>Software Quality Management</p>
           </div>
         </div>
 
@@ -920,7 +935,7 @@ function App() {
       </aside>
 
       <main className="workspace">
-        <header className="topbar">
+        <header className="topbar" hidden={projectLibraryVisible || activeView === "tasks"}>
           <div>
             <span className="eyebrow">Software Quality Agent</span>
             <h2>{qualityVisible ? activeView === "models" ? "模型配置" : "项目资料库" : activeView === "chat" ? "质量问答" : activeView === "report" ? "报告生成" : "需求拆分"}</h2>
@@ -937,13 +952,15 @@ function App() {
             </span>
             <span className="status-pill ok">
               <ShieldCheck size={14} />
-              Local API ready
+              项目工作台
             </span>
           </div>
         </header>
 
-        <section className="quality-panel" hidden={!qualityVisible} aria-label="项目资料库工作台">
-          {(qualityVisited || qualityVisible) && <ProjectsPanel route={lastQualityRoute.current} tenant={tenant} tenantDraft={tenantDraft} onTenantDraft={setTenantDraft} onTenantChange={() => setTenant(tenantDraft.trim())} />}
+        {activeView === "tasks" && <TaskBoard tenant={tenant}/>}
+        <section className={projectLibraryVisible ? "project-library-workbench" : "quality-panel"} hidden={!qualityVisible} aria-label="项目资料库工作台">
+          {!projectLibraryVisible && <header className="panel-header quality-context"><span>{activeView === "models" ? "模型配置" : "项目资料库"}</span>{renderWorkspaceControl()}</header>}
+          {activeView === "models" ? <div className="quality-content"><ModelConfigPage key={tenant} tenant={tenant} /></div> : (qualityVisited || qualityVisible) && <ProjectsPanel route={lastQualityRoute.current[0] === "models" ? ["projects"] : lastQualityRoute.current} tenant={tenant} workspaceControl={renderWorkspaceControl()} reportContent={route[0] === "projects" && route[2] === "reports" ? renderReportView() : undefined} />}
         </section>
         {activeView === "chat" ? renderChatView() : null}
         {activeView === "report" ? renderReportView() : null}
